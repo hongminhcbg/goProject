@@ -1,0 +1,19 @@
+{
+  "NodeCmd" : {
+	 "restart"  : "ff",
+	 "renewid" 	: "01",
+	"renew parent":"02",
+	 
+	 "lednew"   : {
+		"on"  :  "10",
+		"off" :  "11"
+	 },
+	 
+	 "RF" : {
+	  "txpower"  : "03 %s",
+	  "addr"  : "14 %x",
+	  "CBA": "15 %d.%s.%x"
+	}
+  }
+}  
+ 
