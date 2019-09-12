@@ -50,7 +50,6 @@ func MosquittoCallBack_DomoticzOut(c mqtt.Client, message mqtt.Message) {
 
 /************************************************************************/
 func MosquittoCallBack_AdapterOut(c mqtt.Client, message mqtt.Message) {
-
 	//	fmt.Println( string(message.Payload()) )
 	//	fmt.Println()
 	ThingsboardJson.AddObject(string(message.Payload()))

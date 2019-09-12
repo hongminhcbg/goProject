@@ -29,37 +29,43 @@ type httpClient struct {
 var httpThingBoardCurlPost string //post data
 var httpThingBoardCurlGet string  //get data from TB
 var httpThingBoardCurlRes string  //respond data when receive command
+// TB1HttpClient store informations of http client 1
 var TB1HttpClient = httpClient{urlGet: "", urlPost: "", urlRes: "", idRes: ""}
+// TB2HttpClient store informations of http client 2
 var TB2HttpClient = httpClient{urlGet: "", urlPost: "", urlRes: "", idRes: ""}
-var IoTGatewayCommandHttp = map[string]func(httpClient, string){
-	"reboot":      IoTGateway_reboot_http,
-	"poweroff":    IoTGateway_poweroff_http,
-	"checkupdate": IoTGateway_checkupdate_http,
-	"commit":      IoTGateway_commit_http,
+// IoTGatewayCommandHTTP map string with function, avoid a lot of switch-case
+var IoTGatewayCommandHTTP = map[string]func(httpClient, string){
+	"reboot":      IoTGatewayRebootHTTP,
+	"poweroff":    IoTGatewayPoweroffHTTP,
+	"checkupdate": IoTGatewayCheckupdateHTTP,
+	"commit":      IoTGatewayCommitHTTP,
 }
 
-/***********************/
-//iotgateway function
-func IoTGateway_reboot_http(c httpClient, idRes string) {
+//IoTGatewayRebootHTTP reboot pi
+func IoTGatewayRebootHTTP(c httpClient, idRes string) {
 	ThingsboardResponseHTTP(TB_TextToJSON("IoTGateway is rebooting"), c, idRes)
 	GwChars.Reboot()
 }
-func IoTGateway_poweroff_http(c httpClient, idRes string) {
+// IoTGatewayPoweroffHTTP turn off pi
+func IoTGatewayPoweroffHTTP(c httpClient, idRes string) {
 	ThingsboardResponseHTTP(TB_TextToJSON("IoTGateway is rebooting"), c, idRes)
 	gateway_log.Thingsboard_add_log("IoTGateway_poweroff : gateway power off ")
 	GwChars.Poweroff()
 }
-func IoTGateway_checkupdate_http(c httpClient, idRes string) {
+// IoTGatewayCheckupdateHTTP check file in https://www.dropbox.com/sh/dzkpki95m6zgv4r/AACVV6roExWn1sl5oS96Thh5a?dl=0, 
+// if have change download new  file 
+func IoTGatewayCheckupdateHTTP(c httpClient, idRes string) {
 	ThingsboardResponseHTTP(TB_TextToJSON("IoTGateway is checking for updates"), c, idRes)
 	gateway_log.Thingsboard_add_log("IoTGateway_checkupdate: gateway checkupdate")
 	GwChars.CheckUpdate()
 }
-func IoTGateway_commit_http(c httpClient, idRes string) {
+
+// IoTGatewayCommitHTTP copy all data /root/iot_gateway to partition 1 of SD card 
+func IoTGatewayCommitHTTP(c httpClient, idRes string) {
 	str := gateway_commit.Commit()
 	ThingsboardResponseHTTP(TB_TextToJSON(str), c, idRes)
 	gateway_log.Thingsboard_add_log("IoTGateway_commit: commit dir IoTGateway " + str)
 }
-
 /*********************/
 func processMsgHTTP(method, idRes, body string, c httpClient) {
 	args := Parse_Cmd(method)
@@ -119,6 +125,9 @@ func processMsgHTTP(method, idRes, body string, c httpClient) {
 		ThingsboardResponseHTTP(TB_TextToJSON("Unknow object"), c, idRes) //thingsboardResponse(c, topic, TB_TextToJSON("Unknow object"))
 	}
 }
+/**********************************/
+
+// CallBackThingsboardRequestHTTP received command of user, parse id, method, call processMsgHTTP to handle data
 func CallBackThingsboardRequestHTTP(c httpClient) {
 	req, _ := http.NewRequest("GET", c.urlGet, nil)
 	req.Header.Add("Content-Type", "application/json")
@@ -132,45 +141,52 @@ func CallBackThingsboardRequestHTTP(c httpClient) {
 	//fmt.Printf("type of body is %T\n", body)
 	dec := json.NewDecoder(bytes.NewReader(body))
 
-	var json_decode map[string]interface{}
-	if err := dec.Decode(&json_decode); err != nil {
+	var jsonDecode map[string]interface{}
+	if err := dec.Decode(&jsonDecode); err != nil {
 		return
 	}
-	if id_respond_1, ok := json_decode["id"].(float64); ok {
-		id_respond := fmt.Sprintf("%d", int(id_respond_1)) //float to string
-		//c.idRes = id_respond
-		fmt.Printf("id receive = %s\n", id_respond)
-		if method, ok := json_decode["method"].(string); ok {
+	if idRes1, ok := jsonDecode["id"].(float64); ok {
+		idRes := fmt.Sprintf("%d", int(idRes1)) //float to string
+		//c.idRes = idRes
+		fmt.Printf("id receive = %s\n", idRes)
+		if method, ok := jsonDecode["method"].(string); ok {
 			fmt.Println(method)
-			processMsgHTTP(method, id_respond, string(body), c)
+			processMsgHTTP(method, idRes, string(body), c)
 		}
 	}
 }
-
 /************************************************/
+
+// ThingsboardPostHTTP post datato host
 func ThingsboardPostHTTP(c httpClient, msg string) {
 	req, _ := http.NewRequest("POST", c.urlPost, strings.NewReader(msg))
 	req.Header.Add("Content-Type", "application/json")
 	http.DefaultClient.Do(req)
 }
-
 /***************************************************/
+
+// ThingsboardResponseHTTP respond when user use command
 func ThingsboardResponseHTTP(msg string, c httpClient, idRes string) {
 	//THINGSBOARD_CURL := Config.Thingsboard_1.Host + "/api/v1/" + Config.Thingsboard_1.MonitorToken + "/rpc/" + id
-	THINGSBOARD_CURL := c.urlRes + idRes
-	req, _ := http.NewRequest("POST", THINGSBOARD_CURL, strings.NewReader(msg))
+	THINGSBOARDCURL := c.urlRes + idRes
+	req, _ := http.NewRequest("POST", THINGSBOARDCURL, strings.NewReader(msg))
 	req.Header.Add("Content-Type", "application/json")
 	http.DefaultClient.Do(req)
 	//fmt.Println("End respond data")
 }
-
 /********************************************/
+
+// setupCallBackThingsboardRequestHTTP create thread alway wait command of user
 func setupCallBackThingsboardRequestHTTP(c httpClient) {
+	fmt.Println("Minh ============> setupCallBackThingsboardRequestHTTP", c)
 	for {
 		CallBackThingsboardRequestHTTP(c)
 		GwChars.Sleep_ms(100)
 	}
 }
+/***********************************************/
+
+//httpTB1Setup setup TB1 http client
 func httpTB1Setup() {
 	TB1HttpClient.urlPost = Config.Thingsboard_1.Host + "/api/v1/" + Config.Thingsboard_1.MonitorToken + "/telemetry"
 	TB1HttpClient.urlGet = Config.Thingsboard_1.Host + "/api/v1/" + Config.Thingsboard_1.MonitorToken + "/rpc?timeout=2000000"
@@ -182,14 +198,14 @@ func httpTB1Setup() {
 
 	go setupCallBackThingsboardRequestHTTP(TB1HttpClient)
 }
+/**********************************/
 
+// httpTB2Setup setup TB1 http client
 func httpTB2Setup() {
 	TB2HttpClient.urlPost = Config.Thingsboard_2.Host + "/api/v1/" + Config.Thingsboard_2.MonitorToken + "/telemetry"
 	TB2HttpClient.urlGet = Config.Thingsboard_2.Host + "/api/v1/" + Config.Thingsboard_2.MonitorToken + "/rpc?timeout=2000000"
 	TB2HttpClient.urlRes = Config.Thingsboard_2.Host + "/api/v1/" + Config.Thingsboard_2.MonitorToken + "/rpc/" // + id
 	TB2HttpClient.idRes = ""
-	fmt.Println(TB2HttpClient)
-
 	go setupCallBackThingsboardRequestHTTP(TB2HttpClient)
 	//	fmt.Println(TB2HttpClient)
 }

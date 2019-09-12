@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"     
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -398,14 +398,6 @@ func main_monitor() {
 	mqtt_mosquitto_reconnect()
 	setup_mqtt()
 	setupHTTP()
-
-	// if protocol_status == true {
-	// 	fmt.Println("[lhm log] setup_mqtt")
-	// 	setup_mqtt()
-	// } else {
-	// 	fmt.Println("[lhm log] setup_http")
-	// 	setupHTTP()
-	// }
 	now_ms := GwChars.Millis()
 	check_buff_prev_ms := now_ms
 	domoticz_debug_prev_ms := now_ms
