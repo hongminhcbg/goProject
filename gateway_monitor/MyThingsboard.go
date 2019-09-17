@@ -15,7 +15,7 @@ import (
 )
 
 /************************************************************************/
-func help_cmd() string {
+func helpCmd() string {
 	var help strings.Builder
 	help.WriteString(`{`)
 	help.WriteString(`"?     " : "show this help",`)
@@ -26,7 +26,7 @@ func help_cmd() string {
 }
 
 /************************************************************************/
-func help_config() string {
+func helpConfig() string {
 	json, err := json.MarshalIndent(Config, "", "  ")
 	//fmt.Println(string(json))
 	if err != nil {
@@ -36,13 +36,13 @@ func help_config() string {
 }
 
 /************************************************************************/
-func help_config_cmd() string {
+func helpConfigCmd() string {
 	//	fmt.Println(ConfigCmd)
 	return ConfigCmd
 }
 
 /*********************************************************************/
-func help_adapter() string {
+func helpAdapter() string {
 	var s strings.Builder
 	s.WriteString(`{`)
 	s.WriteString(`"adapter. " : "[ restart ]"`)
@@ -51,7 +51,7 @@ func help_adapter() string {
 }
 
 /************************************************************************/
-func help_monitor() string {
+func helpMonitor() string {
 	var s strings.Builder
 	s.WriteString(`{`)
 	s.WriteString(`"monitor. " : "[ restart ]"`)
@@ -60,7 +60,7 @@ func help_monitor() string {
 }
 
 /************************************************************************/
-func help_mosquitto() string {
+func helpMosquitto() string {
 	var s strings.Builder
 	s.WriteString(`{`)
 	s.WriteString(`"mosquitto. " : "[ restart ]"`)
@@ -69,7 +69,7 @@ func help_mosquitto() string {
 }
 
 /************************************************************************/
-func help_domoticz() string {
+func helpDomoticz() string {
 	var s strings.Builder
 	s.WriteString(`{`)
 	s.WriteString(`"domoticz. " : "[ restart ]"`)
@@ -78,7 +78,7 @@ func help_domoticz() string {
 }
 
 /************************************************************************/
-func help_iotgateway() string {
+func helpIotgateway() string {
 	var s strings.Builder
 	s.WriteString(`{`)
 	s.WriteString(`"iotgateway. " : "[ reboot | poweroff | checkupdate | commit ]"`)
@@ -117,25 +117,25 @@ func Parse_Cmd(total_cmd string) []string {
 
 /************************************************************************/
 func IoTGateway_reboot(c mqtt.Client, topic string) {
-	thingsboardResponse(c, topic, TB_TextToJSON("IoTGateway is rebooting"))
+	thingsboardResponse(c, topic, TBTextToJSON("IoTGateway is rebooting"))
 	GwChars.Reboot()
 }
 
 func IoTGateway_poweroff(c mqtt.Client, topic string) {
 	gateway_log.Thingsboard_add_log("IoTGateway_poweroff : gateway power off ") //LHM add 0223
-	thingsboardResponse(c, topic, TB_TextToJSON("IoTGateway is shutting down"))
+	thingsboardResponse(c, topic, TBTextToJSON("IoTGateway is shutting down"))
 	GwChars.Poweroff()
 }
 
 func IoTGateway_checkupdate(c mqtt.Client, topic string) {
 	gateway_log.Thingsboard_add_log("IoTGateway_checkupdate: gateway checkupdate")
-	thingsboardResponse(c, topic, TB_TextToJSON("IoTGateway is checking for updates"))
+	thingsboardResponse(c, topic, TBTextToJSON("IoTGateway is checking for updates"))
 	GwChars.CheckUpdate()
 }
 func IoTGateway_commit(c mqtt.Client, topic string) {
 	str := gateway_commit.Commit()
 	//TB_display_text(c, topic, str)
-	thingsboardResponse(c, topic, TB_TextToJSON(str))
+	thingsboardResponse(c, topic, TBTextToJSON(str))
 	gateway_log.Thingsboard_add_log("IoTGateway_commit: commit dir IoTGateway " + str)
 }
 
@@ -153,7 +153,7 @@ func TB_display_text(c mqtt.Client, topic string, text string) {
 	thingsboardResponse(c, topic, temp_str)
 }
 
-func TB_TextToJSON(text string) string {
+func TBTextToJSON(text string) string {
 	var str strings.Builder
 	str.WriteString(`{"`) // JSON begin
 	for _, line := range strings.Split(text, "\n") {
@@ -178,21 +178,23 @@ var IoTGatewayCommand = map[string]func(mqtt.Client, string){
 }
 
 /************************************************************************/
-func MQTTCallBack_ThingsboardRequest(c mqtt.Client, message mqtt.Message) {
+
+// MQTTCallBackThingsboardRequest process all message from TB
+func MQTTCallBackThingsboardRequest(c mqtt.Client, message mqtt.Message) {
 	fmt.Printf("TOPIC: %s\n", message.Topic())
 	fmt.Printf("MSG: %s\n", message.Payload())
 	dec := json.NewDecoder(bytes.NewReader(message.Payload()))
-	var json_decode map[string]interface{}
-	if err := dec.Decode(&json_decode); err != nil {
+	var jsonDecode map[string]interface{}
+	if err := dec.Decode(&jsonDecode); err != nil {
 		log.Println(err)
 		return
 	}
 	// fmt.Print("\n")
-	// for key := range json_decode {
+	// for key := range jsonDecode {
 	// fmt.Printf("%15s   ", key)
-	// fmt.Println(json_decode[key])
+	// fmt.Println(jsonDecode[key])
 	// }
-	if method, ok := json_decode["method"].(string); ok {
+	if method, ok := jsonDecode["method"].(string); ok {
 		topic := strings.Replace(message.Topic(), "request", "response", 1)
 		//methods := strings.ToLower(method)
 		args := Parse_Cmd(method)
@@ -200,64 +202,63 @@ func MQTTCallBack_ThingsboardRequest(c mqtt.Client, message mqtt.Message) {
 		GwChars.Sleep_ms(2000)
 		switch args[0] {
 		case "?":
-			thingsboardResponse(c, topic, help_cmd())
+			thingsboardResponse(c, topic, helpCmd())
 		case "??":
-			thingsboardResponse(c, topic, help_config())
+			thingsboardResponse(c, topic, helpConfig())
 		case "???":
-			thingsboardResponse(c, topic, help_config_cmd())
+			thingsboardResponse(c, topic, helpConfigCmd())
 		case "adapter":
 			switch args[1] {
 			case "restart":
-				thingsboardResponse(c, topic, TB_TextToJSON("Adapter is restarting"))
+				thingsboardResponse(c, topic, TBTextToJSON("Adapter is restarting"))
 				GwChars.Monitor_restart_adapter()
 
 			default:
-				thingsboardResponse(c, topic, help_adapter())
+				thingsboardResponse(c, topic, helpAdapter())
 			}
 
 		case "monitor":
 			switch args[1] {
 			case "restart":
-				thingsboardResponse(c, topic, TB_TextToJSON("Monitor is restarting"))
+				thingsboardResponse(c, topic, TBTextToJSON("Monitor is restarting"))
 				GwChars.Monitor_restart_monitor()
 
 			default:
-				thingsboardResponse(c, topic, help_monitor())
+				thingsboardResponse(c, topic, helpMonitor())
 			}
 
 		case "mosquitto":
 			switch args[1] {
 			case "restart":
-				thingsboardResponse(c, topic, TB_TextToJSON("Mosquitto is restarting"))
+				thingsboardResponse(c, topic, TBTextToJSON("Mosquitto is restarting"))
 				GwChars.Restart_mosquitto()
 			default:
-				thingsboardResponse(c, topic, help_mosquitto())
+				thingsboardResponse(c, topic, helpMosquitto())
 			}
 
 		case "domoticz":
 			switch args[1] {
 			case "restart":
-				thingsboardResponse(c, topic, TB_TextToJSON("Domoticz is restarting"))
+				thingsboardResponse(c, topic, TBTextToJSON("Domoticz is restarting"))
 				GwChars.Restart_domoticz()
 			default:
-				thingsboardResponse(c, topic, help_domoticz())
+				thingsboardResponse(c, topic, helpDomoticz())
 			}
 
 		case "iotgateway":
 			if fn, ok := IoTGatewayCommand[args[1]]; ok {
 				fn(c, topic)
-
 			} else {
-				thingsboardResponse(c, topic, help_iotgateway())
+				thingsboardResponse(c, topic, helpIotgateway())
 			}
 
 		case "node", "mysensors", "nodecmd":
 			log.Println("case node, mysensors send data to adapter")
 			mqtt_mosquitto.Publish(string(message.Topic()), 0, false, string(message.Payload())) // FW to mosquitto
-			//thingsboardResponse(c, topic, TB_TextToJSON("case node, mysensors"))
+			//thingsboardResponse(c, topic, TBTextToJSON("case node, mysensors"))
 
 		default:
-			thingsboardResponse(c, topic, TB_TextToJSON("Unknow object"))
+			thingsboardResponse(c, topic, TBTextToJSON("Unknow object"))
 		}
 	}
 } // end func

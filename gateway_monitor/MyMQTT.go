@@ -43,25 +43,30 @@ var domoticz_rx_count int = 0
 var domoticz_rx_msg string = ""
 var checkMosValue string
 
-func MosquittoCallBack_DomoticzOut(c mqtt.Client, message mqtt.Message) {
+// MosquittoCallBackDomoticzOut for debug domoticz
+func MosquittoCallBackDomoticzOut(c mqtt.Client, message mqtt.Message) {
 	domoticz_rx_msg = strings.Replace(string(message.Payload()), `"`, ``, -1) // remove all "
 	domoticz_rx_count++
 }
 
 /************************************************************************/
-func MosquittoCallBack_AdapterOut(c mqtt.Client, message mqtt.Message) {
+
+// MosquittoCallBackAdapterOut callback function to debug
+func MosquittoCallBackAdapterOut(c mqtt.Client, message mqtt.Message) {
 	//	fmt.Println( string(message.Payload()) )
 	//	fmt.Println()
 	ThingsboardJson.AddObject(string(message.Payload()))
 }
 
 /************************************************************************/
-func MosquittoCallBack_AdapterResponse(c mqtt.Client, message mqtt.Message) {
+
+// MosquittoCallBackAdapterResponse massage received form adapter
+func MosquittoCallBackAdapterResponse(c mqtt.Client, message mqtt.Message) {
 	log.Printf("TOPIC: %s\n", message.Topic())
 	log.Printf("MSG k: %s\n", message.Payload())
-	topic_str := string(message.Topic())
-	arr_id := strings.Split(topic_str, "/")
-	idRes := arr_id[len(arr_id)-1]
+	topicStr := string(message.Topic())
+	arrID := strings.Split(topicStr, "/")
+	idRes := arrID[len(arrID)-1]
 	if Config.Thingsboard_1.Enable == true {
 		if useMqttTB1 == true { // mqtt
 			mqtt_thingsboard.Publish(string(message.Topic()), 0, false, string(message.Payload()))
@@ -80,7 +85,9 @@ func MosquittoCallBack_AdapterResponse(c mqtt.Client, message mqtt.Message) {
 }
 
 /************************************************************************/
-func thingsboard_LostConnect_Handler(c mqtt.Client, err error) {
+
+// thingsboardLostConnectHandler process event lost connect
+func thingsboardLostConnectHandler(c mqtt.Client, err error) {
 	GwChars.SetLed_Red("1")
 
 	thingsboard_1_connected = false
@@ -88,13 +95,15 @@ func thingsboard_LostConnect_Handler(c mqtt.Client, err error) {
 	log.Printf("Thingsboard.LostConnect, reason: %v\n", err)
 	gateway_log.Thingsboard_add_log("Thingsboard.LostConnect" + err.Error())
 }
+/*********************************/
 
-func thingsboard_OnConnect_Handler(c mqtt.Client) {
+// thingsboardOnConnectHandler process when on conect
+func thingsboardOnConnectHandler(c mqtt.Client) {
 	thingsboard_1_connected = true
 
 	log.Println("Thingsboard.OnConnect")
 	gateway_log.Thingsboard_add_log("Thingsboard.OnConnect")
-	c.Subscribe(THINGSBOARD_TOPIC_REQUEST, 0, MQTTCallBack_ThingsboardRequest)
+	c.Subscribe(THINGSBOARD_TOPIC_REQUEST, 0, MQTTCallBackThingsboardRequest)
 }
 
 /************************************************************************/
@@ -107,28 +116,35 @@ func thingsboard_OnConnect_Handler(c mqtt.Client) {
 // }
 
 /************************************************************************/
-func amazon_LostConnect_Handler(c mqtt.Client, err error) {
+
+// amazonLostConnectHandler thingsboard 2 lost connect
+func amazonLostConnectHandler(c mqtt.Client, err error) {
 	thingsboard_2_connected = false
 
 	log.Printf("AWS.LostConnect, reason: %v\n", err)
 	gateway_log.Thingsboard_add_log("AWS.LostConnect")
 }
+/****************************************/
 
-func amazon_OnConnect_Handler(c mqtt.Client) {
+// amazonOnConnectHandler thingsboard2 onconnect
+func amazonOnConnectHandler(c mqtt.Client) {
 	thingsboard_2_connected = true
 
 	log.Println("AWS.OnConnect")
 	gateway_log.Thingsboard_add_log("AWS.OnConnect")
-	c.Subscribe(THINGSBOARD_TOPIC_REQUEST, 0, MQTTCallBack_ThingsboardRequest)
+	c.Subscribe(THINGSBOARD_TOPIC_REQUEST, 0, MQTTCallBackThingsboardRequest)
 }
-
 /************************************************************************/
-func mosquitto_LostConnect_Handler(c mqtt.Client, err error) {
+
+// mosquittoLostConnectHandler thingsboard2 lost connect
+func mosquittoLostConnectHandler(c mqtt.Client, err error) {
 	log.Printf("Mosquitto.LostConnect, reason: %v\n", err)
 	gateway_log.Thingsboard_add_log("Mosquitto.LostConnect")
 }
+/***************************************/
 
-func mosquitto_OnConnect_Handler(c mqtt.Client) {
+// mosquittoOnConnectHandler mosquitto on connect function
+func mosquittoOnConnectHandler(c mqtt.Client) {
 	log.Println("Mosquitto.OnConnect")
 	gateway_log.Thingsboard_add_log("Mosquitto.OnConnect")
 
@@ -141,16 +157,15 @@ func mosquitto_OnConnect_Handler(c mqtt.Client) {
 		GwChars.Sleep_ms(1000)
 		//c.Connect().WaitTimeout(mqtt_connect_timeout * time.Second)
 		log.Println("log mosquitto")
-		mqtt_mosquitto_reconnect()
+		mqttMosquittoReconnect()
 		return
 	}
 	if Config.Gateway.Debug_domoticz > 0 {
-		c.Subscribe(DOMITICZ_TOPIC_OUT, 0, MosquittoCallBack_DomoticzOut) // for Debug domoticz
+		c.Subscribe(DOMITICZ_TOPIC_OUT, 0, MosquittoCallBackDomoticzOut) // for Debug domoticz
 	}
 
-	c.Subscribe(THINGSBOARD_TOPIC_TELEMETRY, 0, MosquittoCallBack_AdapterOut)     // adapter_data
-	c.Subscribe(THINGSBOARD_TOPIC_RESPONSE, 0, MosquittoCallBack_AdapterResponse) // adapter_response
-	/*****************************************************/
+	c.Subscribe(THINGSBOARD_TOPIC_TELEMETRY, 0, MosquittoCallBackAdapterOut)     // adapter_data
+	c.Subscribe(THINGSBOARD_TOPIC_RESPONSE, 0, MosquittoCallBackAdapterResponse) // adapter_response
 }
 
 /************************************************************************/
@@ -186,48 +201,51 @@ func mosquitto_OnConnect_Handler(c mqtt.Client) {
 // }
 
 /************************************************************************/
-func mqtt_thingsboard_reconnect() {
+
+// mqttThingsboardReconnect setup mqtt thingsboard1
+func mqttThingsboardReconnect() {
 	//thingsboard_add_log("Begin Thingsboard")
 	opts_thingsboard := mqtt.NewClientOptions()
 	opts_thingsboard.AddBroker(Config.Thingsboard_1.Host)
 	opts_thingsboard.SetUsername(Config.Thingsboard_1.MonitorToken)
-	opts_thingsboard.SetConnectionLostHandler(thingsboard_LostConnect_Handler)
-	opts_thingsboard.SetOnConnectHandler(thingsboard_OnConnect_Handler)
+	opts_thingsboard.SetConnectionLostHandler(thingsboardLostConnectHandler)
+	opts_thingsboard.SetOnConnectHandler(thingsboardOnConnectHandler)
 	if mqtt_thingsboard != nil && mqtt_thingsboard.IsConnected() {
 		mqtt_thingsboard.Disconnect(mqtt_disconnect_timeout)
 	}
 	mqtt_thingsboard = mqtt.NewClient(opts_thingsboard)
 	mqtt_thingsboard.Connect().WaitTimeout(mqtt_connect_timeout * time.Second)
 }
-
 /************************************************************************/
-func mqtt_amazon_reconnect() {
+
+// mqttAmazonReconnect setup mqtt for thingsboard2
+func mqttAmazonReconnect() {
 	//thingsboard_add_log("Begin AWS")
-	opts_amazon := mqtt.NewClientOptions()
-	opts_amazon.AddBroker(Config.Thingsboard_2.Host)
-	//opts_amazon.SetTLSConfig( AWS_TlsConfig() )
-	opts_amazon.SetUsername(Config.Thingsboard_2.MonitorToken)
-	opts_amazon.SetConnectionLostHandler(amazon_LostConnect_Handler)
-	opts_amazon.SetOnConnectHandler(amazon_OnConnect_Handler)
+	optsAmazon := mqtt.NewClientOptions()
+	optsAmazon.AddBroker(Config.Thingsboard_2.Host)
+	//optsAmazon.SetTLSConfig( AWS_TlsConfig() )
+	optsAmazon.SetUsername(Config.Thingsboard_2.MonitorToken)
+	optsAmazon.SetConnectionLostHandler(amazonLostConnectHandler)
+	optsAmazon.SetOnConnectHandler(amazonOnConnectHandler)
 	if mqttThingsBoard2 != nil && mqttThingsBoard2.IsConnected() {
 		mqttThingsBoard2.Disconnect(mqtt_disconnect_timeout)
 	}
-	mqttThingsBoard2 = mqtt.NewClient(opts_amazon)
+	mqttThingsBoard2 = mqtt.NewClient(optsAmazon)
 	mqttThingsBoard2.Connect().WaitTimeout(mqtt_connect_timeout * time.Second)
 }
-
 /************************************************************************/
-func mqtt_mosquitto_reconnect() {
+
+// mqttMosquittoReconnect setup domoticz, adapter comunication with monitor
+func mqttMosquittoReconnect() {
 	//thingsboard_add_log("Begin Mosquitto")
-	opts_mosquitto := mqtt.NewClientOptions()
-	opts_mosquitto.AddBroker(MOSQUITTO_HOST)
-	opts_mosquitto.SetConnectionLostHandler(mosquitto_LostConnect_Handler)
-	opts_mosquitto.SetOnConnectHandler(mosquitto_OnConnect_Handler)
+	optsMosquitto := mqtt.NewClientOptions()
+	optsMosquitto.AddBroker(MOSQUITTO_HOST)
+	optsMosquitto.SetConnectionLostHandler(mosquittoLostConnectHandler)
+	optsMosquitto.SetOnConnectHandler(mosquittoOnConnectHandler)
 	if mqtt_mosquitto != nil && mqtt_mosquitto.IsConnected() {
 		mqtt_mosquitto.Disconnect(mqtt_disconnect_timeout)
 	}
-	mqtt_mosquitto = mqtt.NewClient(opts_mosquitto)
+	mqtt_mosquitto = mqtt.NewClient(optsMosquitto)
 	mqtt_mosquitto.Connect().WaitTimeout(mqtt_connect_timeout * time.Second)
 }
-
 /************************************************************************/

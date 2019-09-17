@@ -78,14 +78,21 @@ type Configuration struct {
 		Send_gateway_avg  int
 	}
 }
-
+// Config struct
 var Config = Configuration{}
+
+// ConfigCmd string read in file config
 var ConfigCmd = ""
-var load_config_status bool = false
-var useMqttTB1 bool = true //true is MQTT and flase is HTTP
-var useMqttTB2 bool = true //true is MQTT and flase is HTTP
+
+// loadConfigStatus status read data in config.json, false when readfile falselure
+var loadConfigStatus = false
+
+// useMqttTB1 true is MQTT and flase is HTTP
+var useMqttTB1 = true 
+// useMqttTB1 true is MQTT and flase is HTTP
+var useMqttTB2 = true
 /************************************************************************/
-func load_config() {
+func loadConfig() {
 	file, err := os.Open(CONFIG_FILENAME)
 	if err != nil {
 		log.Println("Can't open config file:", err)
@@ -99,7 +106,7 @@ func load_config() {
 		log.Println("Can't decode config.json:", err)
 		return
 	}
-	load_config_status = true
+	loadConfigStatus = true
 }
 
 /************************************************************************/
@@ -114,33 +121,33 @@ func checkWorkingDir() string {
 		panic(err)
 	}
 
-	log_str := fmt.Sprintf("Change working directory to: %s", dir)
-	log.Println(log_str)
-	gateway_log.Thingsboard_add_log(log_str)
+	logStr := fmt.Sprintf("Change working directory to: %s", dir)
+	log.Println(logStr)
+	gateway_log.Thingsboard_add_log(logStr)
 	return dir
 }
 
 /************************************************************************/
 func checkFileName() {
 	fullname := os.Args[0]
-	fullname_split := strings.Split(fullname, "/")
-	filename := fullname_split[len(fullname_split)-1]
+	fullnameSplit := strings.Split(fullname, "/")
+	filename := fullnameSplit[len(fullnameSplit)-1]
 	//log.Println(fullname, fullname, filename)
 
 	if strings.Contains(filename, "_new") {
 		basename := strings.Replace(filename, "_new", "", 1)
 
 		// kill old program
-		cmd_killall := exec.Command("killall", basename)
-		cmd_killall.Run()
+		cmdKillall := exec.Command("killall", basename)
+		cmdKillall.Run()
 
 		// rename to old name
-		cmd_rename := exec.Command("mv", filename, basename)
-		cmd_rename.Run()
+		cmdRename := exec.Command("mv", filename, basename)
+		cmdRename.Run()
 
 		// start with old name
-		cmd_start := exec.Command("sh", "-c", "./gateway_monitor > log_monitor 2>&1 &")
-		cmd_start.Start()
+		cmdStart := exec.Command("sh", "-c", "./gateway_monitor > log_monitor 2>&1 &")
+		cmdStart.Start()
 
 		// kill new
 		os.Exit(0) // END !!!
@@ -148,13 +155,16 @@ func checkFileName() {
 }
 
 /************************************************************************/
-func checkUpdate() {
-	cmd_checkupdate := exec.Command("sh", "-c", "./gateway_checkupdate monitor > log_checkupdate 2>&1 &")
-	cmd_checkupdate.Start()
-}
 
+// checkUpdate check data form dropbox, if change download new file
+func checkUpdate() {
+	cmdCheckupdate := exec.Command("sh", "-c", "./gateway_checkupdate monitor > log_checkupdate 2>&1 &")
+	cmdCheckupdate.Start()
+}
 /************************************************************************/
-func extract_buildTime() {
+
+// extractBuildTime parse data and get build time
+func extractBuildTime() {
 	list := strings.Fields(buildTime)
 
 	date := list[1]
@@ -183,7 +193,7 @@ func main() {
 	// GwChars.Sleep_ms(500)
 	// }
 	gateway_log.Set_header("M")
-	extract_buildTime()
+	extractBuildTime()
 	gateway_log.Thingsboard_add_log("Program startup ########################")
 	gateway_log.Thingsboard_add_log(fmt.Sprintf("BuildTime: %s", buildTime))
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
@@ -193,8 +203,8 @@ func main() {
 	checkFileName()
 	checkUpdate()
 
-	load_config()
-	load_config_name()
+	loadConfig()
+	loadConfigName()
 	GP.ReadFileConfig()
 	ConfigCmd = GP.StringReadConfigCmd
 	useMqttTB1 = strings.Contains(Config.Thingsboard_1.Host, "tcp")
@@ -207,14 +217,14 @@ func main() {
 	}
 
 	// Loop:
-	main_monitor()
+	mainMonitor()
 }
 
 /************************************************************************/
-func thingsboard_process_debug_msg() {
+func thingsboardProcessDebugMsg() {
 	s := ThingsboardJson.ObjectBegin("[")
 	s.WriteString(`Monitor.debug:"`)
-	s.WriteString(get_current_time())
+	s.WriteString(getCurrentTime())
 	fmt.Fprintf(s, `<br>%d pkt / %d s<br>`, domoticz_rx_count, Config.Gateway.Debug_domoticz)
 	s.WriteString(domoticz_rx_msg)
 	s.WriteString(`",`)
@@ -227,7 +237,9 @@ func thingsboard_process_debug_msg() {
 }
 
 /************************************************************************/
-func thingsboard_process_monitor_msg() {
+
+// thingsboardProcessMonitorMsg add data of monitor into ThingsboardJson
+func thingsboardProcessMonitorMsg() {
 	s := ThingsboardJson.ObjectBegin("[")
 	GwChars.AddCPU(s, &thingsboard_cpu)
 	GwChars.AddMemUse(s)
@@ -240,8 +252,9 @@ func thingsboard_process_monitor_msg() {
 	ThingsboardJson.AddKeyValue(`"Monitor.grow"`, "%.2f", float64(ThingsboardJson.S.Len()+1)/1024.0)
 	ThingsboardJson.ObjectEndCheckLength()
 }
-
 /************************************************************************/
+
+// ThingsboardSendMsg send data to thingsboard
 func ThingsboardSendMsg(msg string) {
 	if Config.Thingsboard_1.Enable == true {
 		if useMqttTB1 == true { //switch protocol to send message
@@ -260,8 +273,10 @@ func ThingsboardSendMsg(msg string) {
 }
 /// Setup
 /************************************************************************/
-func thingsboard_process_buffer() {
-	//fmt.Println("[lhm log] begin thingsboard_process_buffer")
+
+// thingsboardProcessBuffer check queue and S, if have data post to thingsboard
+func thingsboardProcessBuffer() {
+	//fmt.Println("[lhm log] begin thingsboardProcessBuffer")
 	if thingsboard_1_connected == false && thingsboard_2_connected == false {
 		return // mất hết kết nối
 	}
@@ -286,11 +301,11 @@ type Gateway_data struct {
 	average    int
 	count_step int
 }
-
 var thingsboard_data = Gateway_data{}
 var thingsboard_cpu = GwChars.Cpu_data{}
-
 /************************************************************************/
+
+// AddReporttime add report time to header massage
 func AddReporttime(w *strings.Builder) {
 	t := time.Now()
 	_, month, day := t.Date()
@@ -299,7 +314,9 @@ func AddReporttime(w *strings.Builder) {
 	w.WriteString(`"Monitor.reptime":`)
 	fmt.Fprintf(w, `"%02d:%02d:%02d - %02d/%02d",`, hour, min, sec, day, month)
 }
+/***********************/
 
+// AddHeapmonitor add monitor heapsys 
 func AddHeapmonitor(w *strings.Builder) {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
@@ -309,11 +326,10 @@ func AddHeapmonitor(w *strings.Builder) {
 	//w.WriteString(`Monitor.heapalloc:`)
 	//fmt.Fprintf(w, `%.2f,`, float64(m.HeapAlloc) / (1024 * 1024))
 }
-
 /************************************************************************/
 var listname map[string]interface{}
 
-func load_config_name() {
+func loadConfigName() {
 	file, err := ioutil.ReadFile("config_name.json")
 	if err != nil {
 		return
@@ -332,7 +348,9 @@ func load_config_name() {
 }
 
 /************************************************************************/
-func get_config_name(uid string) string {
+
+// getConfigName get name of monitor
+func getConfigName(uid string) string {
 	if listname[uid] != nil {
 		return listname[uid].(string)
 	}
@@ -340,7 +358,9 @@ func get_config_name(uid string) string {
 }
 
 /************************************************************************/
-func thingsboard_process_startup_msg() {
+
+// thingsboardProcessStartupMsg massage send to TB when start up
+func thingsboardProcessStartupMsg() {
 	ThingsboardJson.Queue = make(chan string, Config.Gateway.MQTTJsonQueueLength)
 
 	ThingsboardJson.MaxLength = Config.Gateway.MQTTJsonMaxLength
@@ -349,10 +369,10 @@ func thingsboard_process_startup_msg() {
 
 	ThingsboardJson.ObjectBegin("[")
 	ThingsboardJson.AddKeyValue(`"Monitor.modtime"`, "%s", buildTime)
-	ThingsboardJson.AddKeyValue(`"Monitor.name"`, "%s", get_config_name(GwChars.UID))
+	ThingsboardJson.AddKeyValue(`"Monitor.name"`, "%s", getConfigName(GwChars.UID))
 	ThingsboardJson.AddKeyValue(`"Monitor.uid"`, "%s", GwChars.UID)
 	ThingsboardJson.AddKeyValue(`"Monitor.heapsys"`, "%d", 0)
-	ThingsboardJson.AddKeyValue(`"Monitor.debug"`, "%s", get_current_time()+`<br>Debug disable`)
+	ThingsboardJson.AddKeyValue(`"Monitor.debug"`, "%s", getCurrentTime()+`<br>Debug disable`)
 	ThingsboardJson.ObjectEndCheckLength()
 }
 
@@ -360,10 +380,10 @@ func thingsboard_process_startup_msg() {
 // setup_mqtt mqtt protocol
 func setup_mqtt() {
 	if Config.Thingsboard_1.Enable == true && useMqttTB1 == true {
-		mqtt_thingsboard_reconnect()
+		mqttThingsboardReconnect()
 	}
 	if Config.Thingsboard_2.Enable == true && useMqttTB2 == true {
-		mqtt_amazon_reconnect()
+		mqttAmazonReconnect()
 	}
 }
 
@@ -379,8 +399,8 @@ func setupHTTP() {
 
 /************************************************************************/
 
-func setup_msg() {
-	thingsboard_process_startup_msg()
+func setupMsg() {
+	thingsboardProcessStartupMsg()
 
 	GwChars.Temperature_Init(Config.Gateway.Temperature_k1, Config.Gateway.Temperature_k2)
 
@@ -389,10 +409,12 @@ func setup_msg() {
 }
 
 /************************************************************************/
-func main_monitor() {
+
+// mainMonitor loop here
+func mainMonitor() {
 	/// Setup:
-	setup_msg()
-	mqtt_mosquitto_reconnect()
+	setupMsg()
+	mqttMosquittoReconnect()
 	setup_mqtt()
 	setupHTTP()
 	now_ms := GwChars.Millis()
@@ -426,16 +448,16 @@ func main_monitor() {
 
 		if (now_ms - domoticz_debug_prev_ms) >= debug_timeout {
 			domoticz_debug_prev_ms = now_ms
-			thingsboard_process_debug_msg()
+			thingsboardProcessDebugMsg()
 		}
 
 		if (now_ms - check_buff_prev_ms) >= int64(Config.Gateway.MQTTJsonBuffCheck) {
 			check_buff_prev_ms = now_ms
 
-			thingsboard_process_log_msg() // S now [{"ts":"1234", "data":{"Monitor.log":"abc", "":""}},
-			thingsboard_process_monitor_msg() 	// s now [{"ts":"1234", "data":{"Monitor.log":"abc", "":""}}, 
+			thingsboardProcessLogMsg() // S now [{"ts":"1234", "data":{"Monitor.log":"abc", "":""}},
+			thingsboardProcessMonitorMsg() 	// s now [{"ts":"1234", "data":{"Monitor.log":"abc", "":""}}, 
 												// 		{"ts":"1235", "data":{"key1":"value1"}},{}]
-			thingsboard_process_buffer()
+			thingsboardProcessBuffer()
 		}
 
 		if thingsboard_1_connected == false && thingsboard_2_connected == false {
@@ -478,19 +500,19 @@ func get_log_file(logfile string, num_line_input interface{}) string {
 }
 
 /************************************************************************/
-func get_current_time() string {
-	return time_format(time.Now())
+func getCurrentTime() string {
+	return timeFormat(time.Now())
 }
 
 /************************************************************************/
-func time_format(t time.Time) string {
+func timeFormat(t time.Time) string {
 	_, month, day := t.Date() // year, month, day
 	hour, min, sec := t.Clock()
 	return fmt.Sprintf("%02d:%02d:%02d - %02d/%02d", hour, min, sec, day, month)
 }
 
 /************************************************************************/
-func time_format_log(t time.Time) string {
+func timeFormatLog(t time.Time) string {
 	_, month, day := t.Date() // year, month, day
 	//hour, min, sec := t.Clock()
 	//us := t.UnixNano() / int64(time.Microsecond)
@@ -506,41 +528,40 @@ func time_format_log(t time.Time) string {
 // log.Println("Err get stat new file: ", err)
 // return ""
 // }
-// return time_format(stat.ModTime())
+// return timeFormat(stat.ModTime())
 // }
 
 /************************************************************************/
 //var thingsboard_log = make(chan string, 50)
 
 //func thingsboard_add_log(logmsg string) {
-//	gateway_log.Thingsboard_log <- (time_format_log(time.Now()) + " [M] " + logmsg)
+//	gateway_log.Thingsboard_log <- (timeFormat_log(time.Now()) + " [M] " + logmsg)
 //}
 
 /************************************************************************/
-func thingsboard_process_log_msg() {
+func thingsboardProcessLogMsg() {
 	// if ThingsboardJson.S.Len() >= Config.Gateway.MaxGrow {
 	// return
 	// }
 
-	log_len := len(gateway_log.Thingsboard_log)
-	for log_len == 0 {
+	logLen := len(gateway_log.Thingsboard_log)
+	for logLen == 0 {
 		return
 	}
 
-	log_str := make([]string, log_len)
-	for i := 0; i < log_len; i++ {
-		log_str[i] = <-(gateway_log.Thingsboard_log)
+	logStr := make([]string, logLen)
+	for i := 0; i < logLen; i++ {
+		logStr[i] = <-(gateway_log.Thingsboard_log)
 	}
 
 	s := ThingsboardJson.ObjectBegin("[") //s is string Builder
 	s.WriteString(`"Monitor.log":"`)
-	for i := log_len - 1; i >= 0; i-- {
-		s.WriteString(log_str[i])
+	for i := logLen - 1; i >= 0; i-- {
+		s.WriteString(logStr[i])
 		s.WriteString(`<br>`)
 	}
 	s.WriteString(`",`)
 	ThingsboardJson.ObjectEndCheckLength()
 	// S now [{"ts":"1234", "data":{"Monitor.log":"abc", "":""}},
 }
-
 /************************************************************************/

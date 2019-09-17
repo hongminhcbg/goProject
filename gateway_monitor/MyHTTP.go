@@ -43,19 +43,19 @@ var IoTGatewayCommandHTTP = map[string]func(httpClient, string){
 
 //IoTGatewayRebootHTTP reboot pi
 func IoTGatewayRebootHTTP(c httpClient, idRes string) {
-	ThingsboardResponseHTTP(TB_TextToJSON("IoTGateway is rebooting"), c, idRes)
+	ThingsboardResponseHTTP(TBTextToJSON("IoTGateway is rebooting"), c, idRes)
 	GwChars.Reboot()
 }
 // IoTGatewayPoweroffHTTP turn off pi
 func IoTGatewayPoweroffHTTP(c httpClient, idRes string) {
-	ThingsboardResponseHTTP(TB_TextToJSON("IoTGateway is rebooting"), c, idRes)
+	ThingsboardResponseHTTP(TBTextToJSON("IoTGateway is rebooting"), c, idRes)
 	gateway_log.Thingsboard_add_log("IoTGateway_poweroff : gateway power off ")
 	GwChars.Poweroff()
 }
 // IoTGatewayCheckupdateHTTP check file in https://www.dropbox.com/sh/dzkpki95m6zgv4r/AACVV6roExWn1sl5oS96Thh5a?dl=0, 
 // if have change download new  file 
 func IoTGatewayCheckupdateHTTP(c httpClient, idRes string) {
-	ThingsboardResponseHTTP(TB_TextToJSON("IoTGateway is checking for updates"), c, idRes)
+	ThingsboardResponseHTTP(TBTextToJSON("IoTGateway is checking for updates"), c, idRes)
 	gateway_log.Thingsboard_add_log("IoTGateway_checkupdate: gateway checkupdate")
 	GwChars.CheckUpdate()
 }
@@ -63,7 +63,7 @@ func IoTGatewayCheckupdateHTTP(c httpClient, idRes string) {
 // IoTGatewayCommitHTTP copy all data /root/iot_gateway to partition 1 of SD card 
 func IoTGatewayCommitHTTP(c httpClient, idRes string) {
 	str := gateway_commit.Commit()
-	ThingsboardResponseHTTP(TB_TextToJSON(str), c, idRes)
+	ThingsboardResponseHTTP(TBTextToJSON(str), c, idRes)
 	gateway_log.Thingsboard_add_log("IoTGateway_commit: commit dir IoTGateway " + str)
 }
 /*********************/
@@ -71,58 +71,58 @@ func processMsgHTTP(method, idRes, body string, c httpClient) {
 	args := Parse_Cmd(method)
 	switch args[0] {
 	case "?":
-		ThingsboardResponseHTTP(help_cmd(), c, idRes) //thingsboardResponse(c, topic, help_cmd())
+		ThingsboardResponseHTTP(helpCmd(), c, idRes) //thingsboardResponse(c, topic, help_cmd())
 	case "??":
-		ThingsboardResponseHTTP(help_config(), c, idRes) //thingsboardResponse(c, topic, help_config())
+		ThingsboardResponseHTTP(helpConfig(), c, idRes) //thingsboardResponse(c, topic, help_config())
 
 	case "adapter":
 		switch args[1] {
 		case "restart":
-			ThingsboardResponseHTTP(TB_TextToJSON("Adapter is restarting"), c, idRes) //thingsboardResponse(c, topic, TB_TextToJSON("Adapter is restarting"))
+			ThingsboardResponseHTTP(TBTextToJSON("Adapter is restarting"), c, idRes) //thingsboardResponse(c, topic, TBTextToJSON("Adapter is restarting"))
 			GwChars.Monitor_restart_adapter()
 
 		default:
-			ThingsboardResponseHTTP(help_adapter(), c, idRes) //thingsboardResponse(c, topic, help_adapter())
+			ThingsboardResponseHTTP(helpAdapter(), c, idRes) //thingsboardResponse(c, topic, help_adapter())
 		}
 
 	case "monitor":
 		switch args[1] {
 		case "restart":
-			ThingsboardResponseHTTP(TB_TextToJSON("Monitor is restarting"), c, idRes) //thingsboardResponse(c, topic, TB_TextToJSON("Monitor is restarting"))
+			ThingsboardResponseHTTP(TBTextToJSON("Monitor is restarting"), c, idRes) //thingsboardResponse(c, topic, TBTextToJSON("Monitor is restarting"))
 			GwChars.Monitor_restart_monitor()
 
 		default:
-			ThingsboardResponseHTTP(help_monitor(), c, idRes) //thingsboardResponse(c, topic, help_monitor())
+			ThingsboardResponseHTTP(helpMonitor(), c, idRes) //thingsboardResponse(c, topic, helpMonitor())
 		}
 
 	case "mosquitto":
 		switch args[1] {
 		case "restart":
-			ThingsboardResponseHTTP(TB_TextToJSON("Mosquitto is restarting"), c, idRes) //thingsboardResponse(c, topic, TB_TextToJSON("Mosquitto is restarting"))
+			ThingsboardResponseHTTP(TBTextToJSON("Mosquitto is restarting"), c, idRes) //thingsboardResponse(c, topic, TBTextToJSON("Mosquitto is restarting"))
 			GwChars.Restart_mosquitto()
 		default:
-			ThingsboardResponseHTTP(help_mosquitto(), c, idRes) //thingsboardResponse(c, topic, help_mosquitto())
+			ThingsboardResponseHTTP(helpMosquitto(), c, idRes) //thingsboardResponse(c, topic, helpMosquitto())
 		}
 
 	case "domoticz":
 		switch args[1] {
 		case "restart":
-			ThingsboardResponseHTTP(TB_TextToJSON("Domoticz is restarting"), c, idRes)
+			ThingsboardResponseHTTP(TBTextToJSON("Domoticz is restarting"), c, idRes)
 			GwChars.Restart_domoticz()
 		default:
-			ThingsboardResponseHTTP(help_domoticz(), c, idRes)
+			ThingsboardResponseHTTP(helpDomoticz(), c, idRes)
 		}
 
 	case "iotgateway":
 		if fn, ok := IoTGatewayCommandHTTP[args[1]]; ok {
 			fn(c, idRes)
 		} else {
-			ThingsboardResponseHTTP(help_iotgateway(), c, idRes)
+			ThingsboardResponseHTTP(helpIotgateway(), c, idRes)
 		}
 	case "node", "mysensors", "nodecmd":
 		mqtt_mosquitto.Publish(`v1/devices/me/rpc/request/`+idRes, 0, false, body) // FW to mosquitto
 	default:
-		ThingsboardResponseHTTP(TB_TextToJSON("Unknow object"), c, idRes) //thingsboardResponse(c, topic, TB_TextToJSON("Unknow object"))
+		ThingsboardResponseHTTP(TBTextToJSON("Unknow object"), c, idRes) //thingsboardResponse(c, topic, TBTextToJSON("Unknow object"))
 	}
 }
 /**********************************/
