@@ -1,0 +1,45 @@
+{
+  "AE9090DF"   : {
+    "Gateway"  : "Gateway_DTT",
+      "C72F"   : "N2",
+      "9B7D"   : "N3",
+      "725C"   : "N10"
+	},
+
+  "42A92F20"   : {
+    "Gateway"  : "Gateway_PTIT",
+      "4A39"   : "N2",
+      "EB60"   : "N3",
+      "725C"   : "N10"
+  },
+
+  "DBD36A77"   : {
+    "Gateway"  : "Test",
+      "9B7D"   : "N3",
+      "AAAA"   : "TestDB"
+  },
+  
+  "4A9980F3"   : {
+    "Gateway"  : "PiZero",
+	"EB60"     : "N1",
+	"4A39"     : "N2",
+	"7A17"     : "N3",
+	"4BAD"     : "N4",
+	"4E32"     : "N10",
+	"73C8"     : "N5",
+	"E1CA"     : "CuaRaVao"
+  },
+  
+  "388301BF"   : {
+	"Gateway"    : "Gateway_HUU",
+	"EB60"     : "N1",
+	"4A39"     : "N2",
+	"BF35"     : "N3",
+	"4BAD"     : "N4",
+	"4DDD"     : "N6",
+	"D0FA"     : "N7",
+	"49C6"     : "N8",	
+	"9B7D"     : "N9",
+	"C72F"     : "N10"
+  }
+}

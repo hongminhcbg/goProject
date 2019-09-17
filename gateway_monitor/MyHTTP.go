@@ -114,7 +114,7 @@ func processMsgHTTP(method, idRes, body string, c httpClient) {
 		}
 
 	case "iotgateway":
-		if fn, ok := IoTGatewayCommandHttp[args[1]]; ok {
+		if fn, ok := IoTGatewayCommandHTTP[args[1]]; ok {
 			fn(c, idRes)
 		} else {
 			ThingsboardResponseHTTP(help_iotgateway(), c, idRes)
@@ -157,7 +157,7 @@ func CallBackThingsboardRequestHTTP(c httpClient) {
 }
 /************************************************/
 
-// ThingsboardPostHTTP post datato host
+// ThingsboardPostHTTP post data to host
 func ThingsboardPostHTTP(c httpClient, msg string) {
 	req, _ := http.NewRequest("POST", c.urlPost, strings.NewReader(msg))
 	req.Header.Add("Content-Type", "application/json")

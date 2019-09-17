@@ -1,0 +1,36 @@
+{
+  "NodeCmd" : {
+        "restart"  : "ff",
+        "renewid"      : "01",
+        "renewParent":"02",
+        "report": "t9 0B",
+        "reportFull":"t9 00",
+         "led"   : {
+                "on"  :  "0A",
+                "off" :  "09"
+         },
+
+         "RF" : {
+            "txRetry": "04 %d.%d",
+            "txpower":{
+                "min":"030",
+                "low":"031",
+                "high":"032",
+                "max":"033"
+            },
+            "addr"  : "14 %x",
+            "CBA": "15 %d.%s.%x"
+        },
+        "RF2":{
+            "TXPower":{
+                "min":"050",
+                "low":"051",
+                "high":"052",
+                "max":"053"
+            },
+            "TXRetry":"06 %d.%d",
+            "CBA":"07 %d.%s.%x",
+            "active":"08"
+        }
+  }
+}

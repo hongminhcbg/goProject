@@ -245,23 +245,19 @@ func thingsboard_process_monitor_msg() {
 func ThingsboardSendMsg(msg string) {
 	if Config.Thingsboard_1.Enable == true {
 		if useMqttTB1 == true { //switch protocol to send message
-			//lastMsg = msg
 			mqtt_thingsboard.Publish(THINGSBOARD_TOPIC_TELEMETRY, 0, false, msg)
 		} else {
-			//fmt.Println("[lhm log] ThingsboardSendMsg http")
 			ThingsboardPostHTTP(TB1HttpClient, msg)
 		}
 	}
 	if Config.Thingsboard_2.Enable == true {
 		if useMqttTB2 == true {
-			mqtt_amazon.Publish(THINGSBOARD_TOPIC_TELEMETRY, 0, false, msg)
+			mqttThingsBoard2.Publish(THINGSBOARD_TOPIC_TELEMETRY, 0, false, msg)
 		} else {
 			ThingsboardPostHTTP(TB2HttpClient, msg)
 		}
-
 	}
 }
-
 /// Setup
 /************************************************************************/
 func thingsboard_process_buffer() {
@@ -281,8 +277,8 @@ func thingsboard_process_buffer() {
 			Config.Gateway.MQTTJsonMaxLength,
 			len(QueueMsg)-Config.Gateway.MQTTJsonMaxLength))
 	}
-
-	ThingsboardSendMsg(ThingsboardJson.GetString())
+	// get data form S end send to TB
+	ThingsboardSendMsg(ThingsboardJson.GetString()) 
 }
 
 /************************************************************************/
@@ -361,6 +357,7 @@ func thingsboard_process_startup_msg() {
 }
 
 /************************************************************************/
+// setup_mqtt mqtt protocol
 func setup_mqtt() {
 	if Config.Thingsboard_1.Enable == true && useMqttTB1 == true {
 		mqtt_thingsboard_reconnect()
@@ -435,8 +432,9 @@ func main_monitor() {
 		if (now_ms - check_buff_prev_ms) >= int64(Config.Gateway.MQTTJsonBuffCheck) {
 			check_buff_prev_ms = now_ms
 
-			thingsboard_process_log_msg()
-			thingsboard_process_monitor_msg()
+			thingsboard_process_log_msg() // S now [{"ts":"1234", "data":{"Monitor.log":"abc", "":""}},
+			thingsboard_process_monitor_msg() 	// s now [{"ts":"1234", "data":{"Monitor.log":"abc", "":""}}, 
+												// 		{"ts":"1235", "data":{"key1":"value1"}},{}]
 			thingsboard_process_buffer()
 		}
 
@@ -534,15 +532,15 @@ func thingsboard_process_log_msg() {
 		log_str[i] = <-(gateway_log.Thingsboard_log)
 	}
 
-	s := ThingsboardJson.ObjectBegin("[")
+	s := ThingsboardJson.ObjectBegin("[") //s is string Builder
 	s.WriteString(`"Monitor.log":"`)
 	for i := log_len - 1; i >= 0; i-- {
 		s.WriteString(log_str[i])
 		s.WriteString(`<br>`)
 	}
 	s.WriteString(`",`)
-
 	ThingsboardJson.ObjectEndCheckLength()
+	// S now [{"ts":"1234", "data":{"Monitor.log":"abc", "":""}},
 }
 
 /************************************************************************/

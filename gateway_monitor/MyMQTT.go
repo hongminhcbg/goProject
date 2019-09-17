@@ -29,7 +29,7 @@ const CHECKMOS_TOPIC string = `checkMosquitto`
 
 /// mqtt client
 var mqtt_thingsboard mqtt.Client
-var mqtt_amazon mqtt.Client
+var mqttThingsBoard2 mqtt.Client
 var mqtt_mosquitto mqtt.Client
 
 var thingsboard_1_connected bool = true
@@ -57,8 +57,8 @@ func MosquittoCallBack_AdapterOut(c mqtt.Client, message mqtt.Message) {
 
 /************************************************************************/
 func MosquittoCallBack_AdapterResponse(c mqtt.Client, message mqtt.Message) {
-	log.Printf("TOPICfuckkk: %s\n", message.Topic())
-	log.Printf("MSG fuckkkk: %s\n", message.Payload())
+	log.Printf("TOPIC: %s\n", message.Topic())
+	log.Printf("MSG k: %s\n", message.Payload())
 	topic_str := string(message.Topic())
 	arr_id := strings.Split(topic_str, "/")
 	idRes := arr_id[len(arr_id)-1]
@@ -67,12 +67,12 @@ func MosquittoCallBack_AdapterResponse(c mqtt.Client, message mqtt.Message) {
 			mqtt_thingsboard.Publish(string(message.Topic()), 0, false, string(message.Payload()))
 		} else {
 			ThingsboardResponseHTTP(string(message.Payload()), TB1HttpClient, idRes)
-			log.Print("fuckkkkk id res = ", idRes, "\n")
+			log.Print("id res = ", idRes, "\n")
 		}
 	}
 	if Config.Thingsboard_2.Enable == true {
 		if useMqttTB2 == true {
-			mqtt_amazon.Publish(string(message.Topic()), 0, false, string(message.Payload()))
+			mqttThingsBoard2.Publish(string(message.Topic()), 0, false, string(message.Payload()))
 		} else {
 			ThingsboardResponseHTTP(string(message.Payload()), TB2HttpClient, idRes)
 		}
@@ -209,11 +209,11 @@ func mqtt_amazon_reconnect() {
 	opts_amazon.SetUsername(Config.Thingsboard_2.MonitorToken)
 	opts_amazon.SetConnectionLostHandler(amazon_LostConnect_Handler)
 	opts_amazon.SetOnConnectHandler(amazon_OnConnect_Handler)
-	if mqtt_amazon != nil && mqtt_amazon.IsConnected() {
-		mqtt_amazon.Disconnect(mqtt_disconnect_timeout)
+	if mqttThingsBoard2 != nil && mqttThingsBoard2.IsConnected() {
+		mqttThingsBoard2.Disconnect(mqtt_disconnect_timeout)
 	}
-	mqtt_amazon = mqtt.NewClient(opts_amazon)
-	mqtt_amazon.Connect().WaitTimeout(mqtt_connect_timeout * time.Second)
+	mqttThingsBoard2 = mqtt.NewClient(opts_amazon)
+	mqttThingsBoard2.Connect().WaitTimeout(mqtt_connect_timeout * time.Second)
 }
 
 /************************************************************************/
