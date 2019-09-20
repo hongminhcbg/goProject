@@ -57,7 +57,6 @@ func MosquittoCallBackAdapterOut(c mqtt.Client, message mqtt.Message) {
 	//	fmt.Println()
 	ThingsboardJson.AddObject(string(message.Payload()))
 }
-
 /************************************************************************/
 
 // MosquittoCallBackAdapterResponse massage received form adapter
@@ -83,7 +82,6 @@ func MosquittoCallBackAdapterResponse(c mqtt.Client, message mqtt.Message) {
 		}
 	}
 }
-
 /************************************************************************/
 
 // thingsboardLostConnectHandler process event lost connect
@@ -105,7 +103,6 @@ func thingsboardOnConnectHandler(c mqtt.Client) {
 	gateway_log.Thingsboard_add_log("Thingsboard.OnConnect")
 	c.Subscribe(THINGSBOARD_TOPIC_REQUEST, 0, MQTTCallBackThingsboardRequest)
 }
-
 /************************************************************************/
 // func thingspeak_LostConnect_Handler(c mqtt.Client, err error) {
 // log.Printf("Thingspeak LostConnect_Handler, reason: %v\n", err)
@@ -140,6 +137,7 @@ func amazonOnConnectHandler(c mqtt.Client) {
 func mosquittoLostConnectHandler(c mqtt.Client, err error) {
 	log.Printf("Mosquitto.LostConnect, reason: %v\n", err)
 	gateway_log.Thingsboard_add_log("Mosquitto.LostConnect")
+
 }
 /***************************************/
 
@@ -164,10 +162,9 @@ func mosquittoOnConnectHandler(c mqtt.Client) {
 		c.Subscribe(DOMITICZ_TOPIC_OUT, 0, MosquittoCallBackDomoticzOut) // for Debug domoticz
 	}
 
-	c.Subscribe(THINGSBOARD_TOPIC_TELEMETRY, 0, MosquittoCallBackAdapterOut)     // adapter_data
-	c.Subscribe(THINGSBOARD_TOPIC_RESPONSE, 0, MosquittoCallBackAdapterResponse) // adapter_response
+	c.Subscribe(THINGSBOARD_TOPIC_TELEMETRY, 0, MosquittoCallBackAdapterOut)     // adapter_data `v1/devices/me/telemetry`
+	c.Subscribe(THINGSBOARD_TOPIC_RESPONSE, 0, MosquittoCallBackAdapterResponse) // adapter_response `v1/devices/me/rpc/response/+`
 }
-
 /************************************************************************/
 // func AWS_TlsConfig() *tls.Config {
 // 	File_rootCA := Config.Thingsboard_2.RootCA
@@ -221,16 +218,16 @@ func mqttThingsboardReconnect() {
 // mqttAmazonReconnect setup mqtt for thingsboard2
 func mqttAmazonReconnect() {
 	//thingsboard_add_log("Begin AWS")
-	optsAmazon := mqtt.NewClientOptions()
-	optsAmazon.AddBroker(Config.Thingsboard_2.Host)
-	//optsAmazon.SetTLSConfig( AWS_TlsConfig() )
-	optsAmazon.SetUsername(Config.Thingsboard_2.MonitorToken)
-	optsAmazon.SetConnectionLostHandler(amazonLostConnectHandler)
-	optsAmazon.SetOnConnectHandler(amazonOnConnectHandler)
+	optsTB2 := mqtt.NewClientOptions()
+	optsTB2.AddBroker(Config.Thingsboard_2.Host)
+	//optsTB2.SetTLSConfig( AWS_TlsConfig() )
+	optsTB2.SetUsername(Config.Thingsboard_2.MonitorToken)
+	optsTB2.SetConnectionLostHandler(amazonLostConnectHandler)
+	optsTB2.SetOnConnectHandler(amazonOnConnectHandler)
 	if mqttThingsBoard2 != nil && mqttThingsBoard2.IsConnected() {
 		mqttThingsBoard2.Disconnect(mqtt_disconnect_timeout)
 	}
-	mqttThingsBoard2 = mqtt.NewClient(optsAmazon)
+	mqttThingsBoard2 = mqtt.NewClient(optsTB2)
 	mqttThingsBoard2.Connect().WaitTimeout(mqtt_connect_timeout * time.Second)
 }
 /************************************************************************/

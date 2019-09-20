@@ -11,7 +11,6 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
 	// "net/http"
 	GwChars "gateway_characteristics" // rename to "GwChars"
 	"gateway_log"

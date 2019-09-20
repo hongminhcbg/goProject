@@ -29,10 +29,13 @@ type httpClient struct {
 var httpThingBoardCurlPost string //post data
 var httpThingBoardCurlGet string  //get data from TB
 var httpThingBoardCurlRes string  //respond data when receive command
+
 // TB1HttpClient store informations of http client 1
 var TB1HttpClient = httpClient{urlGet: "", urlPost: "", urlRes: "", idRes: ""}
+
 // TB2HttpClient store informations of http client 2
 var TB2HttpClient = httpClient{urlGet: "", urlPost: "", urlRes: "", idRes: ""}
+
 // IoTGatewayCommandHTTP map string with function, avoid a lot of switch-case
 var IoTGatewayCommandHTTP = map[string]func(httpClient, string){
 	"reboot":      IoTGatewayRebootHTTP,
@@ -71,37 +74,37 @@ func processMsgHTTP(method, idRes, body string, c httpClient) {
 	args := Parse_Cmd(method)
 	switch args[0] {
 	case "?":
-		ThingsboardResponseHTTP(helpCmd(), c, idRes) //thingsboardResponse(c, topic, help_cmd())
+		ThingsboardResponseHTTP(helpCmd(), c, idRes) 
 	case "??":
-		ThingsboardResponseHTTP(helpConfig(), c, idRes) //thingsboardResponse(c, topic, help_config())
+		ThingsboardResponseHTTP(helpConfig(), c, idRes) 
 
 	case "adapter":
 		switch args[1] {
 		case "restart":
-			ThingsboardResponseHTTP(TBTextToJSON("Adapter is restarting"), c, idRes) //thingsboardResponse(c, topic, TBTextToJSON("Adapter is restarting"))
+			ThingsboardResponseHTTP(TBTextToJSON("Adapter is restarting"), c, idRes) 
 			GwChars.Monitor_restart_adapter()
 
 		default:
-			ThingsboardResponseHTTP(helpAdapter(), c, idRes) //thingsboardResponse(c, topic, help_adapter())
+			ThingsboardResponseHTTP(helpAdapter(), c, idRes) 
 		}
 
 	case "monitor":
 		switch args[1] {
 		case "restart":
-			ThingsboardResponseHTTP(TBTextToJSON("Monitor is restarting"), c, idRes) //thingsboardResponse(c, topic, TBTextToJSON("Monitor is restarting"))
+			ThingsboardResponseHTTP(TBTextToJSON("Monitor is restarting"), c, idRes)
 			GwChars.Monitor_restart_monitor()
 
 		default:
-			ThingsboardResponseHTTP(helpMonitor(), c, idRes) //thingsboardResponse(c, topic, helpMonitor())
+			ThingsboardResponseHTTP(helpMonitor(), c, idRes) 
 		}
 
 	case "mosquitto":
 		switch args[1] {
 		case "restart":
-			ThingsboardResponseHTTP(TBTextToJSON("Mosquitto is restarting"), c, idRes) //thingsboardResponse(c, topic, TBTextToJSON("Mosquitto is restarting"))
+			ThingsboardResponseHTTP(TBTextToJSON("Mosquitto is restarting"), c, idRes) 
 			GwChars.Restart_mosquitto()
 		default:
-			ThingsboardResponseHTTP(helpMosquitto(), c, idRes) //thingsboardResponse(c, topic, helpMosquitto())
+			ThingsboardResponseHTTP(helpMosquitto(), c, idRes) 
 		}
 
 	case "domoticz":
@@ -120,9 +123,9 @@ func processMsgHTTP(method, idRes, body string, c httpClient) {
 			ThingsboardResponseHTTP(helpIotgateway(), c, idRes)
 		}
 	case "node", "mysensors", "nodecmd":
-		mqtt_mosquitto.Publish(`v1/devices/me/rpc/request/`+idRes, 0, false, body) // FW to mosquitto
+		mqtt_mosquitto.Publish(`v1/devices/me/rpc/request/`+idRes, 0, false, body) 
 	default:
-		ThingsboardResponseHTTP(TBTextToJSON("Unknow object"), c, idRes) //thingsboardResponse(c, topic, TBTextToJSON("Unknow object"))
+		ThingsboardResponseHTTP(TBTextToJSON("Unknow object"), c, idRes) 
 	}
 }
 /**********************************/
@@ -137,7 +140,7 @@ func CallBackThingsboardRequestHTTP(c httpClient) {
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 
-	//    fmt.Println(string(body))
+	    fmt.Println(string(body), c.urlGet)
 	//fmt.Printf("type of body is %T\n", body)
 	dec := json.NewDecoder(bytes.NewReader(body))
 

@@ -37,8 +37,8 @@
 
   "Thingsboard_2"       : {
     "Enable"            : true,
-    "Host"              : "tcp://172.16.0.158:1883",
-    "Host2"             : "http://172.16.0.158:8080",
+    "Host2"              : "tcp://172.16.0.158:1883",
+    "Host"             : "http://172.16.0.158:8080",
     "MonitorReconnect"  : false,
     "MonitorToken"      : "sWq5EXCQLC8hGVfoXztT",
     "Send_mysensor"     : true,
