@@ -98,8 +98,8 @@ func MqttThingsboardReconnect(host, tocken string, callBackTB func(mqtt.Client, 
 }
 /**************************************/
 
-// RespondMgs respond data to host, publish data to v1/devices/me/rpc/response/id (id is int number TB send)
-func RespondMgs(id,msg string){
+// RespondMsg respond data to host, publish data to v1/devices/me/rpc/response/id (id is int number TB send)
+func RespondMsg(id, msg string){
 	if ThingsboardConnected[0] == false {
 		log.Println("can't connect to host 1")
 	} else {
@@ -116,14 +116,16 @@ func RespondMgs(id,msg string){
 }
 /****************************************/
 
-// SendMgs send msg to TB, msg is json string
-func SendMgs(msg string){
+// SendMsg send msg to TB, msg is json string
+func SendMsg(msg string){
 	if ThingsboardConnected[0] == true {
+		log.Println("send to mqtt host 1")
 		mqttThingsboard[0].Publish(thingsboardTopicTelemetry, 0, false, msg)
 	}
 	if ThingsboardConnected[1] == true {
+		log.Println("send to mqtt host 2")
 		mqttThingsboard[1].Publish(thingsboardTopicTelemetry, 0, false, msg)
 	}
+	log.Println("send to mqtt host done")
 }
-
 /******************************************/

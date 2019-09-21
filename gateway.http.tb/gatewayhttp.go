@@ -28,7 +28,7 @@ func setupCallbackfunc(c client, callbackFunc func(string, string)){
 	
 		res, _ := http.DefaultClient.Do(req)
 	
-		defer res.Body.Close()
+		//defer res.Body.Close()
 		fmt.Println("debug 1", c.urlGet)
 		body, _ := ioutil.ReadAll(res.Body)
 		dec := json.NewDecoder(bytes.NewReader(body))
@@ -49,7 +49,6 @@ func setupCallbackfunc(c client, callbackFunc func(string, string)){
 		GwChars.Sleep_ms(1000)
 	}
 }
-
 /***********************************/
 
 // Setup setup connect to host and device
@@ -64,8 +63,8 @@ func Setup(host, monitorTocken string, callbackFunc func(string, string), index 
 }
 /*********************************/
 
-// RespondMgs respond data to host, push data to url {host}/api/v1/{monitorTocken}/rpc/id (id is int number TB send)
-func RespondMgs(idRes, msg string){
+// RespondMsg respond data to host, push data to url {host}/api/v1/{monitorTocken}/rpc/id (id is int number TB send)
+func RespondMsg(idRes, msg string){
 	if statusSetup[0] == true {
 		THINGSBOARDCURL := httpClient[0].urlRes + idRes
 		req, _ := http.NewRequest("POST", THINGSBOARDCURL, strings.NewReader(msg))
@@ -78,6 +77,20 @@ func RespondMgs(idRes, msg string){
 		req.Header.Add("Content-Type", "application/json")
 		http.DefaultClient.Do(req)
 	}
-
 }
 /************************************/
+
+// SendMsg post msg to thingsboard
+func SendMsg(msg string){
+	if statusSetup[0] == true {
+		req, _ := http.NewRequest("POST", httpClient[0].urlPost, strings.NewReader(msg))
+		req.Header.Add("Content-Type", "application/json")
+		http.DefaultClient.Do(req)
+	}
+
+	if statusSetup[1] == true {
+		req, _ := http.NewRequest("POST", httpClient[1].urlPost, strings.NewReader(msg))
+		req.Header.Add("Content-Type", "application/json")
+		http.DefaultClient.Do(req)
+	}
+}

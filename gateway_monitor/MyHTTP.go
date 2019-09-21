@@ -49,12 +49,14 @@ func IoTGatewayRebootHTTP(c httpClient, idRes string) {
 	ThingsboardResponseHTTP(TBTextToJSON("IoTGateway is rebooting"), c, idRes)
 	GwChars.Reboot()
 }
+
 // IoTGatewayPoweroffHTTP turn off pi
 func IoTGatewayPoweroffHTTP(c httpClient, idRes string) {
 	ThingsboardResponseHTTP(TBTextToJSON("IoTGateway is rebooting"), c, idRes)
 	gateway_log.Thingsboard_add_log("IoTGateway_poweroff : gateway power off ")
 	GwChars.Poweroff()
 }
+
 // IoTGatewayCheckupdateHTTP check file in https://www.dropbox.com/sh/dzkpki95m6zgv4r/AACVV6roExWn1sl5oS96Thh5a?dl=0, 
 // if have change download new  file 
 func IoTGatewayCheckupdateHTTP(c httpClient, idRes string) {
