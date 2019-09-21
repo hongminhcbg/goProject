@@ -27,8 +27,8 @@
 
   "Thingsboard_1"       : {
     "Enable"            : true,
-    "Host2"              : "tcp://demo.thingsboard.io:1883",
-    "Host"               : "http://demo.thingsboard.io:80",
+    "Host"              : "tcp://demo.thingsboard.io:1883",
+    "Host2"               : "http://demo.thingsboard.io:80",
     "MonitorReconnect"  : false,
     "MonitorToken"      : "HutNg8Tcutu5pfi2she1",
     "Send_mysensor"     : true,
@@ -37,8 +37,8 @@
 
   "Thingsboard_2"       : {
     "Enable"            : true,
-    "Host2"              : "tcp://192.168.137.54:1883",
-    "Host"             : "http://192.168.137.54:8080",
+    "Host"              : "tcp://192.168.137.54:1883",
+    "Host2"             : "http://192.168.137.54:8080",
     "MonitorReconnect"  : false,
     "MonitorToken"      : "sWq5EXCQLC8hGVfoXztT",
     "Send_mysensor"     : true,

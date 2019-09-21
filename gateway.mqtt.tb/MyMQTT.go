@@ -82,8 +82,8 @@ func thingsboard2OnConnectHandler(c mqtt.Client) {
 }
 /**********************************************************/
 
-// MqttThingsboardReconnect setup mqtt thingsboard1
-func MqttThingsboardReconnect(host, tocken string, callBackTB func(mqtt.Client, mqtt.Message), index int) {
+// Setup setup mqtt thingsboard1
+func Setup(host, tocken string, callBackTB func(mqtt.Client, mqtt.Message), index int) {
 	optsThingsboard := mqtt.NewClientOptions()
 	optsThingsboard.AddBroker(host)
 	optsThingsboard.SetUsername(tocken)
@@ -100,32 +100,27 @@ func MqttThingsboardReconnect(host, tocken string, callBackTB func(mqtt.Client, 
 
 // RespondMsg respond data to host, publish data to v1/devices/me/rpc/response/id (id is int number TB send)
 func RespondMsg(id, msg string){
-	if ThingsboardConnected[0] == false {
-		log.Println("can't connect to host 1")
-	} else {
+	if ThingsboardConnected[0]{
 		topic := `v1/devices/me/rpc/response/` + id
 		mqttThingsboard[0].Publish(topic, 0, false, msg)
 	}
 
-	if ThingsboardConnected[1] == false {
-		log.Println("can't connect to host 2")
-	} else {
+	if ThingsboardConnected[1]{
 		topic := `v1/devices/me/rpc/response/` + id
 		mqttThingsboard[1].Publish(topic, 0, false, msg)
 	}
 }
 /****************************************/
 
-// SendMsg send msg to TB, msg is json string
-func SendMsg(msg string){
+// PostMsg send msg to TB, msg is json string
+func PostMsg(msg string){
 	if ThingsboardConnected[0] == true {
-		log.Println("send to mqtt host 1")
+		//log.Println("send to mqtt host 1")
 		mqttThingsboard[0].Publish(thingsboardTopicTelemetry, 0, false, msg)
 	}
 	if ThingsboardConnected[1] == true {
-		log.Println("send to mqtt host 2")
+		//log.Println("send to mqtt host 2")
 		mqttThingsboard[1].Publish(thingsboardTopicTelemetry, 0, false, msg)
 	}
-	log.Println("send to mqtt host done")
 }
 /******************************************/

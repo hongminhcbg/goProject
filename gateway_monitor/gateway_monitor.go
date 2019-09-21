@@ -28,7 +28,6 @@ const FILENAME string = "gateway_monitor"
 
 var buildTime string
 
-//var lastMsg string
 /************************************************************************/
 type Configuration struct {
 	MySensors struct {
@@ -88,8 +87,16 @@ var loadConfigStatus = false
 
 // useMqttTB1 true is MQTT and flase is HTTP
 var useMqttTB1 = true 
+
 // useMqttTB1 true is MQTT and flase is HTTP
 var useMqttTB2 = true
+
+// tbResFuncMap map store respond function for http and mqtt
+var tbResFuncMap map[string] func(string, string)
+
+var tb1PostFunc func(string)
+
+var tb2PostFunc func(string)
 /************************************************************************/
 func loadConfig() {
 	file, err := os.Open(CONFIG_FILENAME)
@@ -196,12 +203,9 @@ func main() {
 	gateway_log.Thingsboard_add_log("Program startup ########################")
 	gateway_log.Thingsboard_add_log(fmt.Sprintf("BuildTime: %s", buildTime))
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-
 	checkWorkingDir()
-
 	checkFileName()
 	checkUpdate()
-
 	loadConfig()
 	loadConfigName()
 	GP.ReadFileConfig()
@@ -214,6 +218,8 @@ func main() {
 	} else {
 		gateway_log.Thingsboard_add_log("HTTP " + Config.Thingsboard_1.Host)
 	}
+	tbResFuncMap = make(map[string] func(string, string))
+	//tbPostFuncMap = make(map[string] func(string))
 
 	// Loop:
 	mainMonitor()
@@ -255,22 +261,9 @@ func thingsboardProcessMonitorMsg() {
 
 // ThingsboardSendMsg send data to thingsboard
 func ThingsboardSendMsg(msg string) {
-	if Config.Thingsboard_1.Enable == true {
-		if useMqttTB1 == true { //switch protocol to send message
-			mqtt_thingsboard.Publish(THINGSBOARD_TOPIC_TELEMETRY, 0, false, msg)
-		} else {
-			ThingsboardPostHTTP(TB1HttpClient, msg)
-		}
-	}
-	if Config.Thingsboard_2.Enable == true {
-		if useMqttTB2 == true {
-			mqttThingsBoard2.Publish(THINGSBOARD_TOPIC_TELEMETRY, 0, false, msg)
-		} else {
-			ThingsboardPostHTTP(TB2HttpClient, msg)
-		}
-	}
+	tb1PostFunc(msg)
+	tb2PostFunc(msg)
 }
-/// Setup
 /************************************************************************/
 
 // thingsboardProcessBuffer check queue and S, if have data post to thingsboard
@@ -374,28 +367,6 @@ func thingsboardProcessStartupMsg() {
 	ThingsboardJson.AddKeyValue(`"Monitor.debug"`, "%s", getCurrentTime()+`<br>Debug disable`)
 	ThingsboardJson.ObjectEndCheckLength()
 }
-
-/************************************************************************/
-// setup_mqtt mqtt protocol
-func setup_mqtt() {
-	if Config.Thingsboard_1.Enable == true && useMqttTB1 == true {
-		mqttThingsboardReconnect()
-	}
-	if Config.Thingsboard_2.Enable == true && useMqttTB2 == true {
-		mqttAmazonReconnect()
-	}
-}
-
-/************************************************************************/
-func setupHTTP() {
-	if Config.Thingsboard_1.Enable == true && useMqttTB1 == false {
-		httpTB1Setup()
-	}
-	if Config.Thingsboard_2.Enable == true && useMqttTB2 == false {
-		httpTB2Setup()
-	}
-}
-
 /************************************************************************/
 
 func setupMsg() {
@@ -414,7 +385,7 @@ func mainMonitor() {
 	/// Setup:
 	setupMsg()
 	mqttMosquittoReconnect()
-	setup_mqtt()
+	setupMqtt()
 	setupHTTP()
 	now_ms := GwChars.Millis()
 	check_buff_prev_ms := now_ms

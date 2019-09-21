@@ -29,7 +29,7 @@ func setupCallbackfunc(c client, callbackFunc func(string, string)){
 		res, _ := http.DefaultClient.Do(req)
 	
 		//defer res.Body.Close()
-		fmt.Println("debug 1", c.urlGet)
+		//fmt.Println("debug 1", c.urlGet)
 		body, _ := ioutil.ReadAll(res.Body)
 		dec := json.NewDecoder(bytes.NewReader(body))
 		var jsonDecode map[string]interface{}
@@ -40,7 +40,7 @@ func setupCallbackfunc(c client, callbackFunc func(string, string)){
 		if idRes1, ok := jsonDecode["id"].(float64); ok {
 			idRes := fmt.Sprintf("%d", int(idRes1)) //float to string
 			//c.idRes = idRes
-			fmt.Printf("id receive = %s\n", idRes)
+			//fmt.Printf("id receive = %s\n", idRes)
 			if method, ok := jsonDecode["method"].(string); ok {
 				fmt.Println(method)
 				callbackFunc(idRes, method)
@@ -80,8 +80,8 @@ func RespondMsg(idRes, msg string){
 }
 /************************************/
 
-// SendMsg post msg to thingsboard
-func SendMsg(msg string){
+// PostMsg post msg to thingsboard
+func PostMsg(msg string){
 	if statusSetup[0] == true {
 		req, _ := http.NewRequest("POST", httpClient[0].urlPost, strings.NewReader(msg))
 		req.Header.Add("Content-Type", "application/json")
