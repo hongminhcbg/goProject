@@ -94,17 +94,19 @@ func thingsboardResponse(c mqtt.Client, topic string, msg string) {
 }
 
 /************************************************************************/
-const MAX_ARGS int = 7
+const maxArgs int = 7
+
+// ParseCmd convert string to array split by "." VD: nguyen.hong.minh => [nguyen, hong, minh]
 func ParseCmd(totalCmd string) []string {
 	list := strings.Split(strings.ToLower(totalCmd), ".")
 
-	//var args [MAX_ARGS]string
-	var args = make([]string, MAX_ARGS)
+	//var args [maxArgs]string
+	var args = make([]string, maxArgs)
 
 	len := len(list)
 
-	if len > MAX_ARGS {
-		len = MAX_ARGS
+	if len > maxArgs {
+		len = maxArgs
 	}
 
 	for i := 0; i < len; i++ {

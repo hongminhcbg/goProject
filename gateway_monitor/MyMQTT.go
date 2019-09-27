@@ -19,25 +19,31 @@ import (
 )
 
 /************************************************************************/
-const THINGSBOARD_TOPIC_TELEMETRY string = `v1/devices/me/telemetry`
-const THINGSBOARD_TOPIC_REQUEST string = `v1/devices/me/rpc/request/+`
-const THINGSBOARD_TOPIC_RESPONSE string = `v1/devices/me/rpc/response/+`
 
-const MOSQUITTO_HOST string = `tcp://localhost:1883`
-const DOMITICZ_TOPIC_OUT string = `domoticz/out`
-const DOMITICZ_TOPIC_IN string = `domoticz/in`
-const CHECKMOS_TOPIC string = `checkMosquitto`
+const thingsboardTopicTelemetry string = `v1/devices/me/telemetry`
+
+const thingsboardTopicRequest string = `v1/devices/me/rpc/request/+`
+
+const thingsboardTopicResponse string = `v1/devices/me/rpc/response/+`
+
+const mosquittoHost string = `tcp://localhost:1883`
+
+const domiticzTopicOut string = `domoticz/out`
+
+const domiticzTopicIn string = `domoticz/in`
+
+const checkmosTopic string = `checkMosquitto`
 
 /// mqtt client
 //var mqtt_thingsboard mqtt.Client
 //var mqttThingsBoard2 mqtt.Client
 var mqtt_mosquitto mqtt.Client
 
-var thingsboard_1_connected bool = true
-var thingsboard_2_connected bool = true
+var thingsboard1connected = true
+var thingsboard2connected = true
 
-const mqtt_disconnect_timeout uint = 5000
-const mqtt_connect_timeout time.Duration = 5
+const mqttDisconnectTimeout uint = 5000
+const mqttConnectTimeout time.Duration = 5
 
 /************************************************************************/
 var domoticz_rx_count int = 0
@@ -46,7 +52,6 @@ var checkMosValue string
 
 // MosquittoCallBackDomoticzOut for debug domoticz
 func MosquittoCallBackDomoticzOut(c mqtt.Client, message mqtt.Message) {
-
 	domoticz_rx_msg = strings.Replace(string(message.Payload()), `"`, ``, -1) // remove all "
 	domoticz_rx_count++
 }
@@ -135,7 +140,7 @@ func MosquittoCallBackAdapterResponse(c mqtt.Client, message mqtt.Message) {
 
 // 	log.Println("Thingsboard.OnConnect")
 // 	gateway_log.Thingsboard_add_log("Thingsboard.OnConnect")
-// 	c.Subscribe(THINGSBOARD_TOPIC_REQUEST, 0, MQTTCallBackThingsboardRequest)
+// 	c.Subscribe(thingsboardTopicRequest, 0, MQTTCallBackThingsboardRequest)
 // }
 /************************************************************************/
 // func thingspeak_LostConnect_Handler(c mqtt.Client, err error) {
@@ -163,7 +168,7 @@ func MosquittoCallBackAdapterResponse(c mqtt.Client, message mqtt.Message) {
 
 // 	log.Println("AWS.OnConnect")
 // 	gateway_log.Thingsboard_add_log("AWS.OnConnect")
-// 	c.Subscribe(THINGSBOARD_TOPIC_REQUEST, 0, MQTTCallBackThingsboardRequest)
+// 	c.Subscribe(thingsboardTopicRequest, 0, MQTTCallBackThingsboardRequest)
 // }
 /************************************************************************/
 
@@ -182,22 +187,22 @@ func mosquittoOnConnectHandler(c mqtt.Client) {
 
 	/*****************************************************/
 	//check mosquitto startup publish message and receive this message
-	checMostemp := checkMos.GetStatus(c, CHECKMOS_TOPIC, 2000)
+	checMostemp := checkMos.GetStatus(c, checkmosTopic, 2000)
 	log.Printf("mosquitto startup: %t", checMostemp)
 	if !checMostemp {
 		//c.Disconnect(1000)
 		GwChars.Sleep_ms(1000)
-		//c.Connect().WaitTimeout(mqtt_connect_timeout * time.Second)
+		//c.Connect().WaitTimeout(mqttConnectTimeout * time.Second)
 		log.Println("log mosquitto")
 		mqttMosquittoReconnect()
 		return
 	}
 	if Config.Gateway.Debug_domoticz > 0 {
-		c.Subscribe(DOMITICZ_TOPIC_OUT, 0, MosquittoCallBackDomoticzOut) // for Debug domoticz
+		c.Subscribe(domiticzTopicOut, 0, MosquittoCallBackDomoticzOut) // for Debug domoticz
 	}
 
-	c.Subscribe(THINGSBOARD_TOPIC_TELEMETRY, 0, MosquittoCallBackAdapterOut)     // adapter_data `v1/devices/me/telemetry`
-	c.Subscribe(THINGSBOARD_TOPIC_RESPONSE, 0, MosquittoCallBackAdapterResponse) // adapter_response `v1/devices/me/rpc/response/+`
+	c.Subscribe(thingsboardTopicTelemetry, 0, MosquittoCallBackAdapterOut)     // adapter_data `v1/devices/me/telemetry`
+	c.Subscribe(thingsboardTopicResponse, 0, MosquittoCallBackAdapterResponse) // adapter_response `v1/devices/me/rpc/response/+`
 }
 /************************************************************************/
 // func AWS_TlsConfig() *tls.Config {
@@ -242,10 +247,10 @@ func mosquittoOnConnectHandler(c mqtt.Client) {
 // 	opts_thingsboard.SetConnectionLostHandler(thingsboardLostConnectHandler)
 // 	opts_thingsboard.SetOnConnectHandler(thingsboardOnConnectHandler)
 // 	if mqtt_thingsboard != nil && mqtt_thingsboard.IsConnected() {
-// 		mqtt_thingsboard.Disconnect(mqtt_disconnect_timeout)
+// 		mqtt_thingsboard.Disconnect(mqttDisconnectTimeout)
 // 	}
 // 	mqtt_thingsboard = mqtt.NewClient(opts_thingsboard)
-// 	mqtt_thingsboard.Connect().WaitTimeout(mqtt_connect_timeout * time.Second)
+// 	mqtt_thingsboard.Connect().WaitTimeout(mqttConnectTimeout * time.Second)
 // }
 /************************************************************************/
 
@@ -259,10 +264,10 @@ func mosquittoOnConnectHandler(c mqtt.Client) {
 // 	optsTB2.SetConnectionLostHandler(amazonLostConnectHandler)
 // 	optsTB2.SetOnConnectHandler(amazonOnConnectHandler)
 // 	if mqttThingsBoard2 != nil && mqttThingsBoard2.IsConnected() {
-// 		mqttThingsBoard2.Disconnect(mqtt_disconnect_timeout)
+// 		mqttThingsBoard2.Disconnect(mqttDisconnectTimeout)
 // 	}
 // 	mqttThingsBoard2 = mqtt.NewClient(optsTB2)
-// 	mqttThingsBoard2.Connect().WaitTimeout(mqtt_connect_timeout * time.Second)
+// 	mqttThingsBoard2.Connect().WaitTimeout(mqttConnectTimeout * time.Second)
 // }
 /************************************************************************/
 
@@ -270,13 +275,13 @@ func mosquittoOnConnectHandler(c mqtt.Client) {
 func mqttMosquittoReconnect() {
 	//thingsboard_add_log("Begin Mosquitto")
 	optsMosquitto := mqtt.NewClientOptions()
-	optsMosquitto.AddBroker(MOSQUITTO_HOST)
+	optsMosquitto.AddBroker(mosquittoHost)
 	optsMosquitto.SetConnectionLostHandler(mosquittoLostConnectHandler)
 	optsMosquitto.SetOnConnectHandler(mosquittoOnConnectHandler)
 	if mqtt_mosquitto != nil && mqtt_mosquitto.IsConnected() {
-		mqtt_mosquitto.Disconnect(mqtt_disconnect_timeout)
+		mqtt_mosquitto.Disconnect(mqttDisconnectTimeout)
 	}
 	mqtt_mosquitto = mqtt.NewClient(optsMosquitto)
-	mqtt_mosquitto.Connect().WaitTimeout(mqtt_connect_timeout * time.Second)
+	mqtt_mosquitto.Connect().WaitTimeout(mqttConnectTimeout * time.Second)
 }
 /************************************************************************/

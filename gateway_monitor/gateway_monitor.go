@@ -269,7 +269,7 @@ func ThingsboardSendMsg(msg string) {
 // thingsboardProcessBuffer check queue and S, if have data post to thingsboard
 func thingsboardProcessBuffer() {
 	//fmt.Println("[lhm log] begin thingsboardProcessBuffer")
-	if thingsboard_1_connected == false && thingsboard_2_connected == false {
+	if thingsboard1connected == false && thingsboard2connected == false {
 		return // mất hết kết nối
 	}
 
@@ -287,8 +287,8 @@ func thingsboardProcessBuffer() {
 	// get data form S end send to TB
 	ThingsboardSendMsg(ThingsboardJson.GetString()) 
 }
-
 /************************************************************************/
+
 type Gateway_data struct {
 	average    int
 	count_step int
@@ -387,23 +387,23 @@ func mainMonitor() {
 	mqttMosquittoReconnect()
 	setupMqtt()
 	setupHTTP()
-	now_ms := GwChars.Millis()
-	check_buff_prev_ms := now_ms
-	domoticz_debug_prev_ms := now_ms
-	network_last_connected := now_ms
+	nowMs := GwChars.Millis()
+	checkBuffPrevMs := nowMs
+	domoticzDebugPrevMs := nowMs
+	networkLastConnected := nowMs
 
-	var network_timeout int64
+	var networkTimeout int64
 	if Config.Gateway.NetworkTimeout > 0 {
-		network_timeout = int64(Config.Gateway.NetworkTimeout)
+		networkTimeout = int64(Config.Gateway.NetworkTimeout)
 	} else {
-		network_timeout = 9223372036854775807 // maxInt64
+		networkTimeout = 9223372036854775807 // maxInt64
 	}
 
-	var debug_timeout int64
+	var debugTimeout int64
 	if Config.Gateway.Debug_domoticz > 0 {
-		debug_timeout = int64(Config.Gateway.Debug_domoticz)
+		debugTimeout = int64(Config.Gateway.Debug_domoticz)
 	} else {
-		debug_timeout = 9223372036854775807 // maxInt64
+		debugTimeout = 9223372036854775807 // maxInt64
 	}
 
 	/// Loop:
@@ -414,15 +414,15 @@ func mainMonitor() {
 		// thingsboard_data.count_step = thingsboard_data.average
 		// }
 
-		now_ms = GwChars.Millis()
+		nowMs = GwChars.Millis()
 
-		if (now_ms - domoticz_debug_prev_ms) >= debug_timeout {
-			domoticz_debug_prev_ms = now_ms
+		if (nowMs - domoticzDebugPrevMs) >= debugTimeout {
+			domoticzDebugPrevMs = nowMs
 			thingsboardProcessDebugMsg()
 		}
 
-		if (now_ms - check_buff_prev_ms) >= int64(Config.Gateway.MQTTJsonBuffCheck) {
-			check_buff_prev_ms = now_ms
+		if (nowMs - checkBuffPrevMs) >= int64(Config.Gateway.MQTTJsonBuffCheck) {
+			checkBuffPrevMs = nowMs
 
 			thingsboardProcessLogMsg() // S now [{"ts":"1234", "data":{"Monitor.log":"abc", "":""}},
 			thingsboardProcessMonitorMsg() 	// s now [{"ts":"1234", "data":{"Monitor.log":"abc", "":""}}, 
@@ -430,43 +430,44 @@ func mainMonitor() {
 			thingsboardProcessBuffer()
 		}
 
-		if thingsboard_1_connected == false && thingsboard_2_connected == false {
-			if (now_ms - network_last_connected) >= network_timeout {
+		if thingsboard1connected == false && thingsboard2connected == false {
+			if (nowMs - networkLastConnected) >= networkTimeout {
 				GwChars.Reboot()
 			}
 		} else {
-			network_last_connected = now_ms
+			networkLastConnected = nowMs
 		}
 
 	} // end loop
 } // end function
 
 /************************************************************************/
-func get_log_file(logfile string, num_line_input interface{}) string {
-	num_line_default := 10
-	line_request, ok := num_line_input.(float64)
+// getLogFile noone call him
+func getLogFile(logfile string, numLineInput interface{}) string {
+	numLineDefault := 10
+	lineRequest, ok := numLineInput.(float64)
 	if ok == true {
-		num_line_default = int(line_request)
+		numLineDefault = int(lineRequest)
 	}
 
-	num_line_str := fmt.Sprintf("%d", num_line_default)
+	numLineStr := fmt.Sprintf("%d", numLineDefault)
 
-	log, err := exec.Command("tail", "-n", num_line_str, logfile).Output()
+	log, err := exec.Command("tail", "-n", numLineStr, logfile).Output()
 	if err != nil {
 		return "err"
 	}
 
 	lines := strings.Split(string(log), "\n")
 
-	log_file := "{"
+	logFile := "{"
 	for i := 0; i < len(lines); i++ {
 		if len(lines[i]) > 27 {
-			log_file += fmt.Sprintf(`"%s":"%s",`, lines[i][0:26], lines[i][27:])
+			logFile += fmt.Sprintf(`"%s":"%s",`, lines[i][0:26], lines[i][27:])
 		}
 	}
-	log_file = log_file[:len(log_file)-1] + "}" // remove last ","
+	logFile = logFile[:len(logFile)-1] + "}" // remove last ","
 
-	return log_file
+	return logFile
 }
 
 /************************************************************************/
