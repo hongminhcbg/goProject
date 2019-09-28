@@ -210,32 +210,14 @@ func NewMQTTTbClient(host string, monitorTocken string, idDev string) MQTTTbClie
 	client.idDev = 							idDev
 	client.host = 							host
 	client.monitorTocken = 					monitorTocken
-	if idDev == "TB1" {
-		client.tbLostConnectHandler = func(c mqtt.Client, err error){
-			GwChars.SetLed_Red("1")
-			//client.Connected = false
-			//log.Printf("#%s#\n", lastMsg)
-			log.Printf("Thingsboard1.LostConnect, reason: %v\n", err)
-			//gateway_log.Thingsboard_add_log("Thingsboard1.LostConnect" + err.Error())
-		}
-		client.tbOnConnectHandler = func(c mqtt.Client){
-			//client.Connected = true
-			log.Println("Thingsboard1.OnConnect")
-			//gateway_log.Thingsboard_add_log("Thingsboard1.OnConnect")			
-		}
-	} else {
-		client.tbLostConnectHandler = func(c mqtt.Client, err error){
-			GwChars.SetLed_Red("1")
-			//client.Connected = false
-			//log.Printf("#%s#\n", lastMsg)
-			log.Printf("Thingsboard2.LostConnect, reason: %v\n", err)
-			//gateway_log.Thingsboard_add_log("Thingsboard2.LostConnect" + err.Error())
-		}
-		client.tbOnConnectHandler = func(c mqtt.Client){
-			//client.Connected = true
-			log.Println("Thingsboard2.OnConnect")
-			//gateway_log.Thingsboard_add_log("Thingsboard2.OnConnect")			
-		}
+
+	client.tbLostConnectHandler = func(c mqtt.Client, err error){
+		GwChars.SetLed_Red("1")
+		log.Printf("Thingsboard1.LostConnect, reason: %v\n", err)
+		log.Println()
+	}
+	client.tbOnConnectHandler = func(c mqtt.Client){
+		log.Println("Thingsboard1.OnConnect")
 	}
 
 	optsThingsboard := mqtt.NewClientOptions()
