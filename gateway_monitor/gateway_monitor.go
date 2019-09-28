@@ -17,12 +17,15 @@ import (
 	GP "gateway_parse"
 	"jsonBuffer"
 	// "github.com/eclipse/paho.mqtt.golang"
+	GTC  "gatewayPackage/tbClient" //gateway thingsboard client
 )
 
 /************************************************************************/
+
 var ThingsboardJson = jsonBuffer.JsonBuffer{}
 
 /************************************************************************/
+
 const CONFIG_FILENAME string = "config.json"
 const FILENAME string = "gateway_monitor"
 
@@ -91,13 +94,10 @@ var useMqttTB1 = true
 // useMqttTB1 true is MQTT and flase is HTTP
 var useMqttTB2 = true
 
-// tbResFuncMap map store respond function for http and mqtt
-var tbResFuncMap map[string] func(string, string)
-
-var tb1PostFunc func(string)
-
-var tb2PostFunc func(string)
+var tb1 GTC.TbClient
+var tb2 GTC.TbClient
 /************************************************************************/
+
 func loadConfig() {
 	file, err := os.Open(CONFIG_FILENAME)
 	if err != nil {
@@ -114,8 +114,8 @@ func loadConfig() {
 	}
 	loadConfigStatus = true
 }
-
 /************************************************************************/
+
 func checkWorkingDir() string {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
@@ -134,6 +134,7 @@ func checkWorkingDir() string {
 }
 
 /************************************************************************/
+
 func checkFileName() {
 	fullname := os.Args[0]
 	fullnameSplit := strings.Split(fullname, "/")
@@ -213,14 +214,6 @@ func main() {
 	useMqttTB1 = strings.Contains(Config.Thingsboard_1.Host, "tcp")
 	useMqttTB2 = strings.Contains(Config.Thingsboard_2.Host, "tcp")
 
-	if true == true {
-		gateway_log.Thingsboard_add_log("MQTT " + Config.Thingsboard_1.Host)
-	} else {
-		gateway_log.Thingsboard_add_log("HTTP " + Config.Thingsboard_1.Host)
-	}
-	tbResFuncMap = make(map[string] func(string, string))
-	//tbPostFuncMap = make(map[string] func(string))
-
 	// Loop:
 	mainMonitor()
 }
@@ -261,8 +254,8 @@ func thingsboardProcessMonitorMsg() {
 
 // ThingsboardSendMsg send data to thingsboard
 func ThingsboardSendMsg(msg string) {
-	tb1PostFunc(msg)
-	tb2PostFunc(msg)
+	tb1.Post(msg)
+	tb2.Post(msg)
 }
 /************************************************************************/
 
@@ -377,16 +370,50 @@ func setupMsg() {
 	thingsboard_data.average = Config.Thingsboard_1.Send_gateway_avg
 	thingsboard_data.count_step = thingsboard_data.average
 }
-
 /************************************************************************/
 
+func setupTbClient(mqttTb1, mqtttb2 bool){
+	if Config.Thingsboard_1.Enable {
+		if useMqttTB1 {
+			//tb1 = GTC.MQTTTbClient
+			tb1 = GTC.NewMQTTTbClient(Config.Thingsboard_1.Host, Config.Thingsboard_1.MonitorToken, "TB1")
+			gateway_log.Thingsboard_add_log("TB1 MQTT")
+		} else {
+			//tb1 = GTC.HTTPTbClient
+			tb1 = GTC.NewHTTPTbClient(Config.Thingsboard_1.Host, Config.Thingsboard_1.MonitorToken, "TB1")
+			gateway_log.Thingsboard_add_log("TB1 HTTP")
+		}
+	} else {
+		//tb1 = GTC.Disable
+		tb1 = GTC.NewDisableClient("TB1")
+		gateway_log.Thingsboard_add_log("TB1 Disable")
+	}
+	// set up callback function
+	tb1.Setup(processAllCommand)
+
+	if Config.Thingsboard_2.Enable {
+		if useMqttTB2 {
+			tb2 = GTC.NewMQTTTbClient(Config.Thingsboard_2.Host, Config.Thingsboard_2.MonitorToken, "TB2")
+			gateway_log.Thingsboard_add_log("TB2 MQTT")
+		} else {
+			tb2 = GTC.NewHTTPTbClient(Config.Thingsboard_2.Host, Config.Thingsboard_2.MonitorToken, "TB2")
+			gateway_log.Thingsboard_add_log("TB2 HTTP")
+		}
+	} else {
+		tb2 = GTC.NewDisableClient("TB2")
+		gateway_log.Thingsboard_add_log("TB2 Disable")
+	}
+	// set up callback function
+	tb2.Setup(processAllCommand)
+
+}
+/*************************************************************************/
 // mainMonitor loop here
 func mainMonitor() {
 	/// Setup:
 	setupMsg()
 	mqttMosquittoReconnect()
-	setupMqtt()
-	setupHTTP()
+	setupTbClient(useMqttTB1, useMqttTB2)
 	nowMs := GwChars.Millis()
 	checkBuffPrevMs := nowMs
 	domoticzDebugPrevMs := nowMs

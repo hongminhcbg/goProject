@@ -38,6 +38,12 @@ type HTTPTbClient struct {
 }
 /**************************************************/
 
+// Disable use for thingsboard disable
+type Disable struct {
+	name string
+}
+/*****************************************************/
+
 // MQTTTbClient mqtt, communication with tb by mqtt protocol
 type MQTTTbClient struct {
 	Dev 						mqtt.Client
@@ -161,6 +167,24 @@ func (c MQTTTbClient) Respond(idRes, msg string) {
 	topic := `v1/devices/me/rpc/response/` + idRes
 	c.Dev.Publish(topic, 0, false, msg)
 }
+/********************************************************/
+
+// Setup and do nothng
+func (c Disable) Setup(callbackFunc func(string, string, string)){
+
+}
+/*****************************************************************/
+
+// Post do nothing
+func (c Disable) Post(msg string){
+
+}
+/********************************************************/
+
+// Respond nothings to host
+func (c Disable) Respond(idRes, mgs string){
+
+}
 /*****************************************************************/
 
 // NewHTTPTbClient create new
@@ -227,4 +251,12 @@ func NewMQTTTbClient(host string, monitorTocken string, idDev string) MQTTTbClie
 		client.Dev.Subscribe(client.thingsboardTopicRequest, 0, callBackTB2)
 	}		
 	return client
+}
+/****************************************/
+
+// NewDisableClient create disable
+func NewDisableClient(name string) Disable{
+	var c = Disable{}
+	c.name = name
+	return c
 }
