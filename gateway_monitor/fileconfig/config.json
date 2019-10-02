@@ -36,7 +36,7 @@
   },
 
   "Thingsboard_2"       : {
-    "Enable"            : true,
+    "Enable"            : false,
     "Host"              : "tcp://192.168.68.143:1883",
     "Host2"             : "http://192.168.68.143:8080",
     "MonitorReconnect"  : false,

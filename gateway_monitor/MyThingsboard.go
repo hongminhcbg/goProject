@@ -10,8 +10,6 @@ import (
 	"gateway_log"
 	"log"
 	"strings"
-//	GTC  "gatewayPackage/tbClient" //gateway thingsboard client
-//	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 /************************************************************************/
@@ -87,15 +85,6 @@ func helpIotgateway() string {
 }
 
 /************************************************************************/
-func thingsboardResponse(idRes, idDev, msg string) {
-	if idDev == "TB1" {
-		tb1.Respond(idRes, msg)
-	} else {
-		tb2.Respond(idRes, msg)
-	}
-}
-
-/************************************************************************/
 const maxArgs int = 7
 
 // ParseCmd convert string to array split by "." VD: nguyen.hong.minh => [nguyen, hong, minh]
@@ -135,76 +124,75 @@ func TBTextToJSON(text string) string {
 /**********************************************/
 
 // processAllCommand process all command of user send form tb
-func processAllCommand(idRes, method, idDev string){
-	fmt.Println(idRes, method, idDev)
-
-	//topic := strings.Replace(message.Topic(), "request", "response", 1)
+func processAllCommand(c interface{}, idRes, method string){
+	client := c.(tbClient)
+	fmt.Println(idRes, method)
 	args := ParseCmd(method)
 	gateway_log.Thingsboard_add_log("MQTTCallBack_ThingsboardRequest(): command received [" + method + "]") //LHM add 0223
 	GwChars.Sleep_ms(2000)
 	switch args[0] {
 		case "?":
-			thingsboardResponse(idRes, idDev, helpCmd())
+			client.Respond(idRes, helpCmd())
 		case "??":
-			thingsboardResponse(idRes, idDev, helpConfig())
+			client.Respond(idRes, helpConfig())
 		case "???":
-			thingsboardResponse(idRes, idDev, helpConfigCmd())
+			client.Respond(idRes, helpConfigCmd())
 		case "adapter":
 			switch args[1] {
 			case "restart":
-				thingsboardResponse(idRes, idDev, TBTextToJSON("Adapter is restarting"))
+				client.Respond(idRes, TBTextToJSON("Adapter is restarting"))
 				GwChars.Monitor_restart_adapter()
 
 			default:
-				thingsboardResponse(idRes, idDev, helpAdapter())
+				client.Respond(idRes, helpAdapter())
 			}
 
 		case "monitor":
 			switch args[1] {
 			case "restart":
-				thingsboardResponse(idRes, idDev, TBTextToJSON("Monitor is restarting"))
+				client.Respond(idRes, TBTextToJSON("Monitor is restarting"))
 				GwChars.Monitor_restart_monitor()
 
 			default:
-				thingsboardResponse(idRes, idDev, helpMonitor())
+				client.Respond(idRes, helpMonitor())
 			}
 
 		case "mosquitto":
 			switch args[1] {
 			case "restart":
-				thingsboardResponse(idRes, idDev, TBTextToJSON("Mosquitto is restarting"))
+				client.Respond(idRes, TBTextToJSON("Mosquitto is restarting"))
 				GwChars.Restart_mosquitto()
 			default:
-				thingsboardResponse(idRes, idDev, helpMosquitto())
+				client.Respond(idRes, helpMosquitto())
 			}
 
 		case "domoticz":
 			switch args[1] {
 			case "restart":
-				thingsboardResponse(idRes, idDev, TBTextToJSON("Domoticz is restarting"))
+				client.Respond(idRes, TBTextToJSON("Domoticz is restarting"))
 				GwChars.Restart_domoticz()
 			default:
-				thingsboardResponse(idRes, idDev, helpDomoticz())
+				client.Respond(idRes, helpDomoticz())
 			}
 
 		case "iotgateway":
 			switch args[1] {
 				case "reboot":
-					thingsboardResponse(idRes, idDev, TBTextToJSON("IoTGateway is rebooting"))
+					client.Respond(idRes, TBTextToJSON("IoTGateway is rebooting"))
 					GwChars.Reboot()
 				case "poweroff":
-					thingsboardResponse(idRes, idDev, TBTextToJSON("IoTGateway is rebooting"))
+					client.Respond(idRes, TBTextToJSON("IoTGateway is rebooting"))
 					GwChars.Reboot()
 				case "checkupdate":
 					gateway_log.Thingsboard_add_log("IoTGateway_checkupdate: gateway checkupdate")
-					thingsboardResponse(idRes, idDev, TBTextToJSON("IoTGateway is checking for updates"))
+					client.Respond(idRes, TBTextToJSON("IoTGateway is checking for updates"))
 					GwChars.CheckUpdate()
 				case "commit":
 					str := gateway_commit.Commit()
-					thingsboardResponse(idRes, idDev, TBTextToJSON(str))
+					client.Respond(idRes, TBTextToJSON(str))
 					gateway_log.Thingsboard_add_log("IoTGateway_commit: commit dir IoTGateway " + str)
 				default:
-					thingsboardResponse(idRes, idDev, helpDomoticz())
+					client.Respond(idRes, helpDomoticz())
 			}
 
 		case "node", "mysensors", "nodecmd":
@@ -212,9 +200,9 @@ func processAllCommand(idRes, method, idDev string){
 			topicMos := `v1/devices/me/rpc/request/` + idRes
 			payload := `{"method":"` + method + `"}`
 			mqtt_mosquitto.Publish(topicMos, 0, false, payload) // FW to mosquitto
-			//thingsboardResponse(idRes, idDev, TBTextToJSON("case node, mysensors"))
+			//client.Respond(idRes, TBTextToJSON("case node, mysensors"))
 		default:
-			thingsboardResponse(idRes, idDev, TBTextToJSON("Unknow object"))
+			client.Respond(idRes, TBTextToJSON("Unknow object"))
 	}
 }
 /*************************************************************************/

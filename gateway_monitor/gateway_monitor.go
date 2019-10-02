@@ -11,13 +11,14 @@ import (
 	"runtime"
 	"strings"
 	"time"
-	// "net/http"
 	GwChars "gateway_characteristics" // rename to "GwChars"
 	"gateway_log"
 	GP "gateway_parse"
 	"jsonBuffer"
-	// "github.com/eclipse/paho.mqtt.golang"
-	GTC  "gatewayPackage/tbClient" //gateway thingsboard client
+	GMT "gateway.mqtt.tb" //gateway mqtt thingsboard
+	GHT "gateway.http.tb" //gateway http thingsboard
+	GDT "gateway.disable.tb" // gateway disable
+
 )
 
 /************************************************************************/
@@ -79,6 +80,16 @@ type Configuration struct {
 		Send_gateway_avg  int
 	}
 }
+/************************************/
+
+// tbClient interface monitor connect to host
+type tbClient interface{
+	Post(string)
+	Respond(string, string)
+	SetupCallback(func(interface{}, string, string))
+}
+/************************************/
+
 // Config struct
 var Config = Configuration{}
 
@@ -94,8 +105,8 @@ var useMqttTB1 = true
 // useMqttTB1 true is MQTT and flase is HTTP
 var useMqttTB2 = true
 
-var tb1 GTC.TbClient
-var tb2 GTC.TbClient
+var tb1 tbClient
+var tb2 tbClient
 /************************************************************************/
 
 func loadConfig() {
@@ -376,35 +387,35 @@ func setupTbClient(mqttTb1, mqtttb2 bool){
 	if Config.Thingsboard_1.Enable {
 		if useMqttTB1 {
 			//tb1 = GTC.MQTTTbClient
-			tb1 = GTC.NewMQTTTbClient(Config.Thingsboard_1.Host, Config.Thingsboard_1.MonitorToken, "TB1")
+			tb1 = GMT.NewClient(Config.Thingsboard_1.Host, Config.Thingsboard_1.MonitorToken, "TB1")
 			gateway_log.Thingsboard_add_log("TB1 MQTT")
 		} else {
 			//tb1 = GTC.HTTPTbClient
-			tb1 = GTC.NewHTTPTbClient(Config.Thingsboard_1.Host, Config.Thingsboard_1.MonitorToken, "TB1")
+			tb1 = GHT.NewClient(Config.Thingsboard_1.Host, Config.Thingsboard_1.MonitorToken, "TB1")
 			gateway_log.Thingsboard_add_log("TB1 HTTP")
 		}
 	} else {
 		//tb1 = GTC.Disable
-		tb1 = GTC.NewDisableClient("TB1")
+		tb1 = GDT.NewClient("TB1")
 		gateway_log.Thingsboard_add_log("TB1 Disable")
 	}
 	// set up callback function
-	tb1.Setup(processAllCommand)
+	tb1.SetupCallback(processAllCommand)
 
 	if Config.Thingsboard_2.Enable {
 		if useMqttTB2 {
-			tb2 = GTC.NewMQTTTbClient(Config.Thingsboard_2.Host, Config.Thingsboard_2.MonitorToken, "TB2")
+			tb2 = GMT.NewClient(Config.Thingsboard_2.Host, Config.Thingsboard_2.MonitorToken, "TB2")
 			gateway_log.Thingsboard_add_log("TB2 MQTT")
 		} else {
-			tb2 = GTC.NewHTTPTbClient(Config.Thingsboard_2.Host, Config.Thingsboard_2.MonitorToken, "TB2")
+			tb2 = GHT.NewClient(Config.Thingsboard_2.Host, Config.Thingsboard_2.MonitorToken, "TB2")
 			gateway_log.Thingsboard_add_log("TB2 HTTP")
 		}
 	} else {
-		tb2 = GTC.NewDisableClient("TB2")
+		tb2 = GDT.NewClient("TB2")
 		gateway_log.Thingsboard_add_log("TB2 Disable")
 	}
 	// set up callback function
-	tb2.Setup(processAllCommand)
+	tb2.SetupCallback(processAllCommand)
 
 }
 /*************************************************************************/
