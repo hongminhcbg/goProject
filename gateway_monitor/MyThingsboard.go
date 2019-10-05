@@ -10,6 +10,7 @@ import (
 	"gateway_log"
 	"log"
 	"strings"
+	tbclient "gatewayPackage/tbClient"
 )
 
 /************************************************************************/
@@ -124,8 +125,8 @@ func TBTextToJSON(text string) string {
 /**********************************************/
 
 // processAllCommand process all command of user send form tb
-func processAllCommand(c interface{}, idRes, method string){
-	client := c.(tbClient)
+func processAllCommand(c tbclient.TbClient, idRes, method string){
+	client := c
 	fmt.Println(idRes, method)
 	args := ParseCmd(method)
 	gateway_log.Thingsboard_add_log("MQTTCallBack_ThingsboardRequest(): command received [" + method + "]") //LHM add 0223

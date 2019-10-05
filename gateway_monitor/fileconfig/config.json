@@ -27,8 +27,8 @@
 
   "Thingsboard_1"       : {
     "Enable"            : true,
-    "Host2"              : "tcp://demo.thingsboard.io:1883",
-    "Host"               : "http://demo.thingsboard.io:80",
+    "Host"              : "tcp://demo.thingsboard.io:1883",
+    "Host2"               : "http://demo.thingsboard.io:80",
     "MonitorReconnect"  : false,
     "MonitorToken"      : "HutNg8Tcutu5pfi2she1",
     "Send_mysensor"     : true,
