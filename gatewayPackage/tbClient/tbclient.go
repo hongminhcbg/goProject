@@ -20,11 +20,6 @@ func Start(idDev string) *Disable{
 	fmt.Println(idDev, " disable")
 	return c
 }
-
-// SetupCallback and do nothng
-// func (c *Disable) SetupCallback(callbackFunc func(TbClient, string, string), idDev string){
-//     fmt.Println(idDev, " disable")
-// }
 /*****************************************************************/
 
 // Post do nothing

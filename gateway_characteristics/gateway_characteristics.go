@@ -242,6 +242,7 @@ func AddUpTime(w *strings.Builder) {
 
 
 /************************************************************************/
+
 func Get_UID() (string) {
 	SID_128 := RegMem.MemSlice8(RegMem.ALLWINNERH3_SID_KEY0, 16)
 	SID_32  := crc32.ChecksumIEEE( SID_128 )
@@ -250,6 +251,7 @@ func Get_UID() (string) {
 
 
 /************************************************************************/
+
 func Get_Overlayroot() (float64) {
 	out, err := exec.Command("df", "--output=used", "/").Output()
 	if err != nil {
