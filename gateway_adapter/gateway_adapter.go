@@ -13,12 +13,12 @@ import (
 	"path/filepath"
 
   // custom package
-  GwChars "gateway_characteristics"      // rename to "GwChars"
+  	GwChars "gatewayPackage/gateway_characteristics"      // rename to "GwChars"
 //GwChars "gateway_characteristics_win"  // rename to "GwChars" (Windows)
 
-	"jsonBuffer"
-	"gateway_log"
-	GP "gateway_parse"
+	jsonBuffer "gatewayPackage/jsonBuffer"
+	gateway_log "gatewayPackage/gateway_log"
+	GP "gatewayPackage/gateway_parse"
 )
 /************************************************************************/
 var ThingsboardJson = jsonBuffer.JsonBuffer{}

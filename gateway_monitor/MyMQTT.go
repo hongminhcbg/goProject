@@ -10,9 +10,9 @@ import (
 	//	"io/ioutil"
 	//	"crypto/tls"
 	//	"crypto/x509"
-	GwChars "gateway_characteristics" // rename to "GwChars"
-	checkMos "gateway_checkMos"
-	"gateway_log"
+	GwChars "gatewayPackage/gateway_characteristics" // rename to "GwChars"
+	checkMos "gatewayPackage/gateway_checkMos"
+	gateway_log "gatewayPackage/gateway_log"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 //	GMT "gateway.mqtt.tb"

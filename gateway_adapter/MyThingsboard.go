@@ -9,9 +9,9 @@ import (
 	"github.com/eclipse/paho.mqtt.golang"
 	"bytes"
 	"log"
-	"gateway_log"
-	GwChars "gateway_characteristics"  // rename to "GwChars"
-	GP "gateway_parse"
+	gateway_log "gatewayPackage/gateway_log"
+	GwChars "gatewayPackage/gateway_characteristics"  // rename to "GwChars"
+	GP "gatewayPackage/gateway_parse"
 )
 /************************************************************************/
 const CMD_RESTART         string = "FF"

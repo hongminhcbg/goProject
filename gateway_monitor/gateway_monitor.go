@@ -11,10 +11,10 @@ import (
 	"runtime"
 	"strings"
 	"time"
-	GwChars "gateway_characteristics" // rename to "GwChars"
-	"gateway_log"
-	GP "gateway_parse"
-	"jsonBuffer"
+	GwChars "gatewayPackage/gateway_characteristics" // rename to "GwChars"
+	gateway_log "gatewayPackage/gateway_log"
+	GP "gatewayPackage/gateway_parse"
+	jsonBuffer "gatewayPackage/jsonBuffer"
 	GMT "gatewayPackage/tbClient.mqtt" //gateway mqtt thingsboard
 	GHT "gatewayPackage/tbClient.http" //gateway http thingsboard
 	//GDT "gatewayPackage/tbClient.disable" // gateway disable
@@ -340,7 +340,6 @@ func loadConfigName() {
 		delete(listname, "Gateway")
 	}
 }
-
 /************************************************************************/
 
 // getConfigName get name of monitor
@@ -350,7 +349,6 @@ func getConfigName(uid string) string {
 	}
 	return "Unknow"
 }
-
 /************************************************************************/
 
 // thingsboardProcessStartupMsg massage send to TB when start up
@@ -407,7 +405,6 @@ func setupTbClient(mqttTb1, mqtttb2 bool){
 		tb2 = tbclient.Start("TB2")
 		gateway_log.Thingsboard_add_log("TB2 Disable")
 	}
-
 }
 /*************************************************************************/
 // mainMonitor loop here

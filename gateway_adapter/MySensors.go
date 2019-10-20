@@ -13,8 +13,8 @@ import (
 	"encoding/json"
 	"bytes"
 	"net/http"
-	"gateway_log"
-  GwChars "gateway_characteristics"      // rename to "GwChars"
+	gateway_log "gatewayPackage/gateway_log"
+  GwChars "gatewayPackage/gateway_characteristics"      // rename to "GwChars"
 //GwChars "gateway_characteristics_win"  // rename to "GwChars" (Windows)
 )
 

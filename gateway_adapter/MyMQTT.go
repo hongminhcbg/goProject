@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 	"github.com/eclipse/paho.mqtt.golang"
-	"gateway_log"
+	gateway_log "gatewayPackage/gateway_log"
 )
 
 /************************************************************************/
