@@ -22,7 +22,8 @@
 	  "NetworkTimeout"       : 1800000,
     "MQTTJsonMaxLength"    : 10000,
     "MQTTJsonQueueLength"  : 100,
-		"MQTTJsonBuffCheck"    : 5000
+    "MQTTJsonBuffCheck"    : 5000,
+    "GatewayToken"             :""
   },
 
   "Thingsboard_1"       : {
@@ -37,8 +38,8 @@
 
   "Thingsboard_2"       : {
     "Enable"            : false,
-    "Host2"              : "tcp://192.168.68.168:1883",
-    "Host"             : "http://192.168.68.168:8080",
+    "Host2"              : "tcp://192.168.137.98:1883",
+    "Host"             : "http://192.168.137.98:8080",
     "MonitorReconnect"  : false,
     "MonitorToken"      : "sWq5EXCQLC8hGVfoXztT",
     "Send_mysensor"     : true,

@@ -1,0 +1,29 @@
+package main
+
+import (
+	"crypto/rand"
+	"encoding/base64"
+	"fmt"
+	"github.com/ryanuber/go-otp"
+)
+
+func main() {
+	m := make([]byte, 16*32)
+
+	//fmt.Println("[LHM] material = ", base64.StdEncoding.EncodeToString(m))
+
+	rand.Read(m)
+	//fmt.Println("[LHM] material = ", base64.StdEncoding.EncodeToString(m))
+	// Create a new pad with 16-byte pages. Set pointer to page 1.
+	pad, err := otp.NewPad(m, 16, 1)
+	if err != nil {
+		fmt.Printf("%s", err)
+		return
+	}
+	println(pad)
+	encrypted, _ := pad.Encrypt([]byte("4ADF5GTD"))
+	fmt.Println(base64.StdEncoding.EncodeToString(encrypted))
+	
+	decrypted, _ := pad.Decrypt(encrypted)
+	fmt.Printf("%s\n\n", decrypted)
+}

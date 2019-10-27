@@ -36,7 +36,7 @@ func helpConfig() string {
 
 /************************************************************************/
 func helpConfigCmd() string {
-	//	fmt.Println(ConfigCmd)
+
 	return ConfigCmd
 }
 

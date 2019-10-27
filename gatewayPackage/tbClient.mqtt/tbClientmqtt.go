@@ -8,7 +8,6 @@ import (
 
 //	"io/ioutil"
 	GwChars "gatewayPackage/gateway_characteristics" // rename to "GwChars"
-//	gateway_log "gatewayPackage/gateway_log"
 	"bytes"
 	"encoding/json"
 	mqtt "github.com/eclipse/paho.mqtt.golang"

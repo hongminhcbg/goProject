@@ -22,7 +22,7 @@ type Client struct {
 	urlGet 				string
 	urlRes 				string
 	idDev 				string
-	processAll  func()
+	hostAlive 			chan bool // len chan == 0 hostAlive
 }
 /*********************************/
 
@@ -50,32 +50,37 @@ func Start(host string, monitorTocken string, CB func(tbclient.TbClient, string,
 	c.urlGet = host + "/api/v1/" + monitorTocken + "/rpc?timeout=2000000"
 	c.urlPost = host + "/api/v1/" + monitorTocken + "/telemetry"
 	c.urlRes = host + "/api/v1/" + monitorTocken + "/rpc/" // + id
-	
+	c.hostAlive = make(chan bool, 1)
 	// ping test
-	// url := parseURL(host);
-	// if !testURLCanReach(url){
-	// 	fmt.Println(idDev, "HTTP can't connect")
-	// 	return c
-	// }
-	go func(){
+	url := parseURL(host);
+	if !testURLCanReach(url){
+		fmt.Println(idDev, "HTTP can't connect, wait 30s and reconnect")
+		c.hostAlive <- false
+	} else {
 		fmt.Println(idDev, "HTTP on connect")
+	}
+	go func(){
 		for {
-			fmt.Println("[LHM log] ============> i'm debug log 1 ", idDev)
 			req, _ := http.NewRequest("GET", c.urlGet, nil)
 			req.Header.Add("Content-Type", "application/json")
 			res, _ := http.DefaultClient.Do(req)
-			if res == nil {
+			if res == nil { // host die
+				if len(c.hostAlive) == 0 {
+					c.hostAlive <- false
+				}
 				fmt.Println("host die, wait 30s and reconnect")
 				time.Sleep(30000 * time.Millisecond)
 				continue
 			}
-			fmt.Println("[LHM log] ============> i'm debug log 2 ", idDev)
+			if len(c.hostAlive) != 0 {
+				<-c.hostAlive
+			}
+
 			body, err := ioutil.ReadAll(res.Body)
 			if err != nil {
 				fmt.Println("[lhm log] read body error")
 			}
 			dec := json.NewDecoder(bytes.NewReader(body))
-			fmt.Println("[LHM log] ============> i'm debug log 3 ", idDev)
 			var jsonDecode map[string]interface{}
 			if err = dec.Decode(&jsonDecode); err != nil {
 				fmt.Println("decode error")
@@ -96,14 +101,23 @@ func Start(host string, monitorTocken string, CB func(tbclient.TbClient, string,
 
 // Post post msg to host
 func (c *Client) Post(msg string) {
+	if len(c.hostAlive) != 0 {
+		fmt.Println("host not alive, can't post msg")
+		return
+	}
+
 	req, _ := http.NewRequest("POST", c.urlPost, strings.NewReader(msg))
 	req.Header.Add("Content-Type", "application/json")
-	http.DefaultClient.Do(req)	
+	http.DefaultClient.Do(req)
 }
 /*************************************/
 
 // Respond to host
 func (c *Client) Respond(idRes string, msg string){
+	if len(c.hostAlive) != 0 {
+		fmt.Println("host not alive, can't respond msg")
+		return
+	}
 	THINGSBOARDCURL := c.urlRes + idRes
 	req, _ := http.NewRequest("POST", THINGSBOARDCURL, strings.NewReader(msg))
 	req.Header.Add("Content-Type", "application/json")
