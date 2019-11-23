@@ -1,0 +1,59 @@
+{
+  "MySensors"              : {
+    "S0"                   : "Report",
+    "Msg_type"             : [
+      "0B, Fire, emerSta, Air",
+      "0C, RCWL, LostTx, Temp",
+      "0D, RCWL, LostTx, Test"
+    ],
+    "Max_temp"             : 100,
+    "Max_RCWL"             : 4900,
+    "Report_interval"      : 60000,
+    "Lost_tb_k1"           : 0.0,
+    "Lost_tb_k2"           : 64.0
+  },
+
+  "Gateway"                : {
+    "Renew_eth0_interval"  : 0,
+    "Send_step"            : 500,
+    "Temperature_k1"       : 16,
+    "Temperature_k2"       : 8,
+    "Debug_domoticz"       : 0,
+	  "NetworkTimeout"       : 1800000,
+    "MQTTJsonMaxLength"    : 10000,
+    "MQTTJsonQueueLength"  : 100,
+    "MQTTJsonBuffCheck"    : 5000,
+    "GatewayToken"             :"p750M8cljr0gQVyn3UiplZC11uh/DrjS/Us4mVuTesbXbaqUU0EaddAhXzCDMmb7kdQrOLvp/uHszq4Byk3pNyWNL65nx9vvOSUHLKUIKxtw+yGN+RKgkvRWKyM4XY+uiBKhAn/jL6ZAljbWybdbQWGkXTqaRVCfF2B2oIgeDco="
+  },
+
+  "Thingsboard_1"       : {
+    "Enable"            : false,
+    "Host"              : "tcp://203.162.88.116:1883",
+    "MonitorReconnect"  : false,
+    "MonitorToken"      : "Ze7go9wAXs0wUpQyVayK",
+    "Send_mysensor"     : true,
+    "Send_gateway_avg"  : 10
+  },
+
+  "Thingsboard_2"       : {
+    "Enable"            : false,
+    "Host"              : "tcp://203.162.88.116:1883",
+    "Host2"             : "http://203.162.88.116:8080",
+    "MonitorReconnect"  : false,
+    "MonitorToken"      : "QwzBUONYmL9CZuhckQrh",
+    "Send_mysensor"     : true,
+    "Send_gateway_avg"  : 10
+  },
+
+  "Thingspeak_1"        : {
+    "Enable"            : false,
+    "Reconnect"         : false,
+    "Host"              : "tcp://mqtt.thingspeak.com:1883",
+    "ChannelID_1"       : "432355",
+    "ChannelWriteKey_1" : "DSJP4GHN6WLNY7FR",
+    "ChannelID_2"       : "440336",
+    "ChannelWriteKey_2" : "OUPL7LC4KJYJ0ISA",
+    "Send_mysensor"     : false,
+    "Send_gateway"      : 0
+  }
+}

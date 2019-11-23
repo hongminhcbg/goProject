@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"bytes"
-	GwChars "gatewayPackage/gateway_characteristics"
+	//GwChars "gatewayPackage/gateway_characteristics"
 	"strings"
 	tbclient "gatewayPackage/tbClient"
 	"time"
@@ -45,7 +45,7 @@ func testURLCanReach(url string) bool {
 /************************************/
 
 // Start create new client
-func Start(host string, monitorTocken string, CB func(tbclient.TbClient, string, string), idDev string) *Client {
+func Start(host string, monitorTocken string, CB func(tbclient.TbClient, string, string, string), idDev string) *Client {
 	c := &Client{}
 	c.urlGet = host + "/api/v1/" + monitorTocken + "/rpc?timeout=2000000"
 	c.urlPost = host + "/api/v1/" + monitorTocken + "/telemetry"
@@ -85,14 +85,19 @@ func Start(host string, monitorTocken string, CB func(tbclient.TbClient, string,
 			if err = dec.Decode(&jsonDecode); err != nil {
 				fmt.Println("decode error")
 			} else if idRes1, ok := jsonDecode["id"].(float64); ok {
+				fmt.Println("[HVM] =======> all msg", jsonDecode)
 				idRes := fmt.Sprintf("%d", int(idRes1)) //float to string
 				//fmt.Printf("id receive = %s\n", idRes)
 				if method, ok := jsonDecode["method"].(string); ok {
 					//fmt.Println(method)
-					CB(tbclient.TbClient(c), idRes, method)
+					if params, ok := jsonDecode["params"].(string); ok {
+						CB(tbclient.TbClient(c), idRes, method, params)
+					} else {
+						CB(tbclient.TbClient(c), idRes, method, "")
+					}
 				}
 			}
-			GwChars.Sleep_ms(100)
+			time.Sleep(100 * time.Millisecond)
 		}
 	}()
 	return c
@@ -112,7 +117,7 @@ func (c *Client) Post(msg string) {
 }
 /*************************************/
 
-// Respond to host
+// Respond to host, msg is json string
 func (c *Client) Respond(idRes string, msg string){
 	if len(c.hostAlive) != 0 {
 		fmt.Println("host not alive, can't respond msg")

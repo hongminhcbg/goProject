@@ -1,8 +1,8 @@
 package gateway_commit 
 import(
-"os/exec"
-"strings"
-"strconv"
+	"os/exec"
+	"strings"
+	"strconv"
 )
 /***************************************************************************/
 const rw_strings string = "mount -o remount,rw /dev/mmcblk0p1"

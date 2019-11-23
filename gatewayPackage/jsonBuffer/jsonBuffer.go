@@ -29,8 +29,7 @@ func (m *JsonBuffer) AddKeyValue(key string, format string, value interface{}) {
 }
 /************************************************************************/
 
-// ObjectBegin begi object { "ts":"123456", "value":{
-// form {"ts":1451649600512, "values":{"key1":"value1", "key2":"value2"}}
+// ObjectBegin begin object { "ts":"123456", "value":{
 func (m *JsonBuffer) ObjectBegin(start string) (*strings.Builder) {
 	m.Mux.Lock()
 
