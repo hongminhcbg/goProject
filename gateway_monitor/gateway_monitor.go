@@ -19,6 +19,9 @@ import (
 	GHT "gatewayPackage/tbClient.http" //gateway http thingsboard
 	//GDT "gatewayPackage/tbClient.disable" // gateway disable
 	tbclient "gatewayPackage/tbClient"
+	"math/rand"
+	checkkey "gatewayPackage/checkKey"
+
 )
 
 /************************************************************************/
@@ -222,15 +225,20 @@ func main() {
 	ConfigCmd = GP.StringReadConfigCmd
 	useMqttTB1 = strings.Contains(Config.Thingsboard_1.Host, "tcp")
 	useMqttTB2 = strings.Contains(Config.Thingsboard_2.Host, "tcp")
-
+	
+	if checkkey.CheckCopyRight() {
+		fmt.Println("check key success")
+		mainMonitor()
+	} else {
+		fmt.Println("check key flase, exit monitor")
+	}
 	// Loop:
-	mainMonitor()
 }
 
 /************************************************************************/
 func thingsboardProcessDebugMsg() {
 	s := ThingsboardJson.ObjectBegin("[")
-	s.WriteString(`Monitor.debug:"`)
+	s.WriteString(`"Monitor.debug":`)
 	s.WriteString(getCurrentTime())
 	fmt.Fprintf(s, `<br>%d pkt / %d s<br>`, domoticz_rx_count, Config.Gateway.Debug_domoticz)
 	s.WriteString(domoticz_rx_msg)
@@ -258,6 +266,47 @@ func thingsboardProcessMonitorMsg() {
 	AddReporttime(s)
 	ThingsboardJson.AddKeyValue(`"Monitor.grow"`, "%.2f", float64(ThingsboardJson.S.Len()+1)/1024.0)
 	ThingsboardJson.ObjectEndCheckLength()
+}
+/***********************************************************************/
+var lastEmer = 0
+func getNotice(emergency int) int{
+	returnVal := 0
+	switch(lastEmer){
+		case 0:
+			returnVal = emergency
+		case 1:
+			switch(emergency){
+			case 0:
+				returnVal = 3
+			case 1:
+				returnVal = 0
+			default: //2
+				returnVal = 2
+			}
+		default: //2
+			switch(emergency){
+				case 0:
+					returnVal = 3
+				default: //1,2
+					returnVal = 0
+			}
+	}		
+	lastEmer = emergency
+	return returnVal
+}
+/***********************************************************************/
+
+// thingsboardProcessAir read air from device
+func thingsboardProcessAir(){
+	emergency := rand.Intn(100) % 3
+	notice := getNotice(emergency)
+
+	s := ThingsboardJson.ObjectBegin("[")
+	s.WriteString(`"Monitor.emergency":`)
+	fmt.Fprintf(s, `"%d",`, emergency)
+	s.WriteString(`"Monitor.notice":`)
+	fmt.Fprintf(s, `"%d",`, notice)
+	ThingsboardJson.ObjectEndCheckLength()	
 }
 /************************************************************************/
 
@@ -417,7 +466,7 @@ func mainMonitor() {
 	checkBuffPrevMs := nowMs
 	domoticzDebugPrevMs := nowMs
 	networkLastConnected := nowMs
-
+	lastTimeCheckEmer := nowMs
 	var networkTimeout int64
 	if Config.Gateway.NetworkTimeout > 0 {
 		networkTimeout = int64(Config.Gateway.NetworkTimeout)
@@ -456,6 +505,11 @@ func mainMonitor() {
 			thingsboardProcessBuffer()
 		}
 
+		if (nowMs - lastTimeCheckEmer) > 50000 {
+			lastTimeCheckEmer = nowMs
+			thingsboardProcessAir()
+		}
+
 		if thingsboard1connected == false && thingsboard2connected == false {
 			if (nowMs - networkLastConnected) >= networkTimeout {
 				GwChars.Reboot()
@@ -468,6 +522,7 @@ func mainMonitor() {
 } // end function
 
 /************************************************************************/
+
 // getLogFile noone call him
 func getLogFile(logfile string, numLineInput interface{}) string {
 	numLineDefault := 10

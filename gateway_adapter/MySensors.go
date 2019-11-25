@@ -477,6 +477,7 @@ func node_process_sensor(id int64, unit string, string_msg string) {
 		s.WriteString(`.`)
 		s.WriteString(msg_type[unit][i])
 		fmt.Fprintf(s, `":"%s",`, value)
+		fmt.Println("data finish = ", s.String())
 	}
 	
 	mqtt_mosquitto.Publish(THINGSBOARD_TOPIC_TELEMETRY, 0, false, ThingsboardJson.GetObject())
@@ -511,12 +512,12 @@ func MosquittoCallBack_DomoticzOut(c mqtt.Client, message mqtt.Message) {
 	}
 
 	domoticz_rxtime := time.Now()
-	domoticz_svalue := domoticz_msg["svalue1"].(string)
-	domoticz_idx    := fmt.Sprintf("%.0f", domoticz_msg["idx"].(float64));
-	domoticz_id     := domoticz_msg["id"].(string)
-	domoticz_unit   := domoticz_id[6:8]
+	domoticz_svalue := domoticz_msg["svalue1"].(string) //1B0034123412
+	domoticz_idx    := fmt.Sprintf("%.0f", domoticz_msg["idx"].(float64)) // 5
+	domoticz_id     := domoticz_msg["id"].(string) // 0000010B
+	domoticz_unit   := domoticz_id[6:8] // 0B
 	
-	node_id, err := strconv.ParseInt(domoticz_id[0:6], 16, 64)
+	node_id, err := strconv.ParseInt(domoticz_id[0:6], 16, 64) // 000001
 	if err != nil {
 		return
 	}
@@ -550,6 +551,7 @@ func MosquittoCallBack_DomoticzOut(c mqtt.Client, message mqtt.Message) {
 
 			case "0B", "0C", "0D":  // sensors
 				if len(domoticz_svalue) != (num_sensor * 4) {  // kiểm tra kích thước bản tin
+					fmt.Println("len(domoticz_svalue) != (num_sensor * 4) {")
 					return
 				}
 
@@ -559,6 +561,7 @@ func MosquittoCallBack_DomoticzOut(c mqtt.Client, message mqtt.Message) {
 					log.Printf("Request UID: %d\n", node_id)
 					Send_NodeCmd(node_id, CMD_REPORT)
 				} else {
+					fmt.Println("[HVM]  =====> trace mgs node_process_sensor")
 					node_process_sensor(node_id, domoticz_unit, domoticz_svalue)
 					last_time_sensors_rx = GwChars.Millis()
 					

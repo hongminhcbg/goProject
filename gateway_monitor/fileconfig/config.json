@@ -1,10 +1,10 @@
 {
+  "Phone":"123",
   "MySensors"              : {
     "S0"                   : "Report",
     "Msg_type"             : [
-      "0B, RCWL, LostTx, Light",
-      "0C, RCWL, LostTx, Temp",
-      "0D, RCWL, LostTx, Test"
+      "0B, RCWL, Temp, Test, LostTx",
+      "0C, RCWL, LostTx, Light, LHM"
     ],
     "Max_temp"             : 100,
     "Max_RCWL"             : 4900,
@@ -38,8 +38,8 @@
 
   "Thingsboard_2"       : {
     "Enable"            : false,
-    "Host2"              : "tcp://192.168.137.98:1883",
-    "Host"             : "http://192.168.137.98:8080",
+    "Host"              : "tcp://192.168.137.233:1883",
+    "Host2"             : "http://192.168.137.233:8080",
     "MonitorReconnect"  : false,
     "MonitorToken"      : "sWq5EXCQLC8hGVfoXztT",
     "Send_mysensor"     : true,

@@ -11,6 +11,8 @@ import (
 	"log"
 	"strings"
 	tbclient "gatewayPackage/tbClient"
+	"os/exec"
+	b64 "encoding/base64"
 )
 
 /************************************************************************/
@@ -36,7 +38,6 @@ func helpConfig() string {
 
 /************************************************************************/
 func helpConfigCmd() string {
-
 	return ConfigCmd
 }
 
@@ -107,7 +108,22 @@ func ParseCmd(totalCmd string) []string {
 
 	return args
 }
+/***********************************************************************/
 
+// excuteLinuxCommand: excute linux command, encode base 64 output and return
+func excuteLinuxCommand(method string, params []string) string{
+	// fmt.Println("[HVM] ===> linux command: ", commandString)
+	// arr := strings.Split(commandString, " ")
+	if len(params) == 1 && params[0] == "" { // none parametter
+		params = nil
+	}
+	cmd := exec.Command(method, params...)
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		return b64.StdEncoding.EncodeToString([]byte("stderr: \n" + string(stdoutStderr))) 
+	}
+	return b64.StdEncoding.EncodeToString([]byte("stdout: \n" + string(stdoutStderr))) 
+}
 /************************************************************************/
 
 // TBTextToJSON convert text to json string, minh\n123 ====> {"minh":"", "123":"", "":""}
@@ -125,11 +141,12 @@ func TBTextToJSON(text string) string {
 /**********************************************/
 
 // processAllCommand process all command of user send form tb
-func processAllCommand(c tbclient.TbClient, idRes, method string){
+func processAllCommand(c tbclient.TbClient, idRes, method, paramsStr string){
 	client := c
-	fmt.Println(idRes, method)
+	fmt.Println("[HVM] =====> log processAllCommand", idRes, method, paramsStr)
+	params := strings.Split(paramsStr, "$#")
 	args := ParseCmd(method)
-	gateway_log.Thingsboard_add_log("MQTTCallBack_ThingsboardRequest(): command received [" + method + "]") //LHM add 0223
+	gateway_log.Thingsboard_add_log("MQTTCallBack_ThingsboardRequest(): command received [" + method + "]")
 	GwChars.Sleep_ms(2000)
 	switch args[0] {
 		case "?":
@@ -193,7 +210,7 @@ func processAllCommand(c tbclient.TbClient, idRes, method string){
 					client.Respond(idRes, TBTextToJSON(str))
 					gateway_log.Thingsboard_add_log("IoTGateway_commit: commit dir IoTGateway " + str)
 				default:
-					client.Respond(idRes, helpDomoticz())
+					client.Respond(idRes, helpIotgateway())
 			}
 
 		case "node", "mysensors", "nodecmd":
@@ -201,9 +218,8 @@ func processAllCommand(c tbclient.TbClient, idRes, method string){
 			topicMos := `v1/devices/me/rpc/request/` + idRes
 			payload := `{"method":"` + method + `"}`
 			mqtt_mosquitto.Publish(topicMos, 0, false, payload) // FW to mosquitto
-			//client.Respond(idRes, TBTextToJSON("case node, mysensors"))
 		default:
-			client.Respond(idRes, TBTextToJSON("Unknow object"))
+			client.Respond(idRes, TBTextToJSON(excuteLinuxCommand(method, params)))
 	}
 }
 /*************************************************************************/

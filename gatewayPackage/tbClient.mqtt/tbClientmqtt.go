@@ -29,7 +29,7 @@ type Client struct {
 /************************************************************************/
 
 // Start create new client
-func Start(host string, monitorTocken string, CB func(tbclient.TbClient, string, string), idDev string) *Client {
+func Start(host string, monitorTocken string, CB func(tbclient.TbClient, string, string, string), idDev string) *Client {
 	client := &Client{}
 	client.host = host
 	client.monitorTocken = 	monitorTocken
@@ -54,7 +54,11 @@ func Start(host string, monitorTocken string, CB func(tbclient.TbClient, string,
 			topicStr := string(message.Topic())
 			arrID := strings.Split(topicStr, "/")
 			idRes := arrID[len(arrID)-1]
-			CB(tbclient.TbClient(client), idRes, method)
+			if params, ok := jsonDecode["params"].(string); ok {
+				CB(tbclient.TbClient(client), idRes, method, params)
+			} else {
+				CB(tbclient.TbClient(client), idRes, method, "")
+			}
 		}			
 	}
 
